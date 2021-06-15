@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "182092319540",
+    "project_id": "smart-attendance-app-7263e",
+    "storage_bucket": "smart-attendance-app-7263e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182092319540:android:8ab4c4c72aeb8566ae3361",
+        "android_client_info": {
+          "package_name": "br.com.emesonpereira.to_presente"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182092319540-k894jln36k7r73979373okokvkae1n9o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHYFtCMPtL-FyOdfYRsRHpQB_dlTgdkVQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182092319540-k894jln36k7r73979373okokvkae1n9o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
