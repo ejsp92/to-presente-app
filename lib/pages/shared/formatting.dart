@@ -35,7 +35,7 @@ class LoadingScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: SpinKitDoubleBounce(
-          color: Colors.cyan,
+          color: Colors.blue[400],
           size: 50,
         ),
       ),
@@ -50,7 +50,7 @@ class LoadingData extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Center(
         child: SpinKitThreeBounce(
-          color: Colors.cyan,
+          color: Colors.blue[400],
           size: 30,
         ),
       ),
@@ -67,7 +67,7 @@ class AuthLoading extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: _width, vertical: _height),
       child: Center(
         child: SpinKitThreeBounce(
-          color: Colors.cyan,
+          color: Colors.blue[400],
           size: 40,
         ),
       ),

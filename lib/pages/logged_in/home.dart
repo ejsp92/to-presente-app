@@ -1,6 +1,6 @@
-import 'package:attendanceapp/logged_in/student/home.dart';
-import 'package:attendanceapp/logged_in/teacher/home.dart';
-import 'package:attendanceapp/logged_in/verification.dart';
+import 'package:attendanceapp/pages/logged_in/student/home.dart';
+import 'package:attendanceapp/pages/logged_in/teacher/home.dart';
+import 'package:attendanceapp/pages/logged_in/verification.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {

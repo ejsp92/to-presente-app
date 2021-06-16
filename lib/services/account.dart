@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class User{
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final RegExp emailRegExp = RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
 
   Stream<FirebaseUser> get account{
     return _auth.onAuthStateChanged;
@@ -66,12 +67,11 @@ class User{
 
   String validateId(String id)
   {
-    if(id.isEmpty)
-    {
-      return "Email can't be blank";
-    }
-    else
-    {
+    if(id.isEmpty) {
+      return 'Email não pode ficar em branco';
+    } else if (!emailRegExp.hasMatch(id)) {
+      return 'Email deve ser válido';
+    } else {
       return null;
     }
   }
@@ -80,7 +80,7 @@ class User{
   {
     if(pass.length < 6)
     {
-      return "Password can't be less than 6 characters";
+      return "Senha não pode ter menos que 6 caracateres";
     }
     else
     {
@@ -92,7 +92,7 @@ class User{
   {
     if(pass.isEmpty)
     {
-      return "Password can't be empty";
+      return "Senha não pode ficar em branco";
     }
     else
     {

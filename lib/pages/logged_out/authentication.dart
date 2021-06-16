@@ -1,5 +1,5 @@
-import 'package:attendanceapp/logged_out/methods/log_in.dart';
-import 'package:attendanceapp/logged_out/methods/register.dart';
+import 'package:attendanceapp/pages/logged_out/fragments/log_in.dart';
+import 'package:attendanceapp/pages/logged_out/fragments/register.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
