@@ -10,7 +10,7 @@ class AttendanceList extends StatefulWidget {
 }
 
 class _AttendanceListState extends State<AttendanceList> {
-  final GetAttendance _attendance = GetAttendance();
+  final Attendance _attendance = Attendance();
 
   Map _attendanceList = {};
   Map _attendanceListVisible ={};

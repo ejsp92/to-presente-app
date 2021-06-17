@@ -16,7 +16,7 @@ class _BatchesState extends State<Batches> {
   FirebaseUser _user;
   String _subject = '';
   String _error  = '';
-  String _userName = "";
+  String _userName = '';
   String _batch = '';
   List<String> _batches = [];
   List<String> _batchesVisible = [];
@@ -49,7 +49,7 @@ class _BatchesState extends State<Batches> {
                 Expanded(
                   child: Container(
                     padding: EdgeInsets.fromLTRB(18, 95, 0, 20),
-                    color: Colors.cyan,
+                    color: Colors.blue[400],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -107,11 +107,7 @@ class _BatchesState extends State<Batches> {
                 Container(
                   padding: EdgeInsets.fromLTRB(5, 60, 30, 50),
                   decoration: BoxDecoration(
-                      color: Colors.cyan,
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(50),
-                          bottomRight: Radius.circular(50)
-                      )
+                      color: Colors.blue[400]
                   ),
                   child: Row(
                     children: <Widget>[
@@ -124,8 +120,8 @@ class _BatchesState extends State<Batches> {
                             borderRadius: BorderRadius.all(Radius.circular(50))
                         ),
                         child: FlatButton.icon(
-                          label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
-                          icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
+                          label: Text('Log Out', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                          icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                           onPressed: () async {
                             dynamic result = await Account().signOut();
                             if (result == null) {
@@ -164,7 +160,7 @@ class _BatchesState extends State<Batches> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.menu, color: Colors.cyan),
+                        icon: Icon(Icons.menu, color: Colors.blue[400]),
                         onPressed: () async{
                           _scaffoldKey.currentState.openEndDrawer();
                         },
@@ -233,7 +229,7 @@ class _BatchesState extends State<Batches> {
                                           children: <Widget>[
                                             Expanded(
                                               child: FlatButton(
-                                                child: Text('Cancel', style: TextStyle(color: Colors.cyan),),
+                                                child: Text('Cancel', style: TextStyle(color: Colors.blue[400]),),
                                                 onPressed: (){
                                                   Navigator.of(context).pop();
                                                 },
@@ -241,7 +237,7 @@ class _BatchesState extends State<Batches> {
                                             ),
                                             Expanded(
                                               child: FlatButton(
-                                                child: Text('Delete', style: TextStyle(color: Colors.cyan),),
+                                                child: Text('Delete', style: TextStyle(color: Colors.blue[400]),),
                                                 onPressed: () async{
                                                   dynamic result = await _tSAB.deleteBatch(_subject, _batchesVisible[index]);
                                                   String deleted = _batchesVisible[index];
@@ -281,7 +277,7 @@ class _BatchesState extends State<Batches> {
                       },
                       title: Row(
                         children: <Widget>[
-                          Expanded(child: Text('${_batchesVisible[index]}', style: TextStyle(color: Colors.cyan),)),
+                          Expanded(child: Text('${_batchesVisible[index]}', style: TextStyle(color: Colors.blue[400]),)),
                           _delete ? Icon(Icons.delete, color: Colors.grey[700],) : Icon(Icons.forward, color: Colors.grey[700],),
                         ],
                       ),
@@ -307,7 +303,7 @@ class _BatchesState extends State<Batches> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         decoration: BoxDecoration(
-            color: Colors.cyan,
+            color: Colors.blue[400],
             borderRadius: BorderRadius.all(Radius.circular(50))
         ),
         child: Row(
@@ -338,7 +334,7 @@ class _BatchesState extends State<Batches> {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             decoration: BoxDecoration(
-                color: Colors.cyan,
+                color: Colors.blue[400],
                 borderRadius: BorderRadius.all(Radius.circular(50))
             ),
             child: Row(
@@ -402,7 +398,7 @@ class _BatchesState extends State<Batches> {
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                                     decoration: BoxDecoration(
-                                      color: Colors.cyan,
+                                      color: Colors.blue[400],
                                       borderRadius: BorderRadius.all(Radius.circular(20)),
                                     ),
                                     child: Center(child: Text("Add", style: TextStyle(color: Colors.white),)),
@@ -459,7 +455,7 @@ class _BatchesState extends State<Batches> {
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                                     decoration: BoxDecoration(
-                                      color: Colors.cyan,
+                                      color: Colors.blue[400],
                                       borderRadius: BorderRadius.all(Radius.circular(20)),
                                     ),
                                     child: Center(child: Text("Done", style: TextStyle(color: Colors.white),)),

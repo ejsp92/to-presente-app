@@ -19,8 +19,9 @@ class _SubjectsState extends State<Subjects> {
   bool _delete = false;
   final _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
-  String _subject = ' ';
-  String _error = ' ';
+  String _search = '';
+  String _subject = '';
+  String _errorMsg = '';
   String _userName = '';
   TeacherSubjectsAndBatches _tSAB;
   FirebaseUser _user;
@@ -30,13 +31,14 @@ class _SubjectsState extends State<Subjects> {
     _tSAB = TeacherSubjectsAndBatches(_user);
     _subjects = await _tSAB.getSubjects();
     if(_subjects == null){
-      _subjects = ["Couldn't get subjects, try logging in again"];
+      _subjects = ["Não foi possível obter assuntos, tente fazer login novamente."];
     }
-    _subjectsVisible = _subjects;
+    if (_search.isEmpty) _subjectsVisible = _subjects;
+    else _subjectsVisible = _subjects.where((subject) => subject.toLowerCase().contains(_search.toLowerCase())).toList();
 
     _userName = await User(_user).userName();
     if(_userName == null){
-      _userName = 'Can\'t Get Name';
+      _userName = 'N/D';
     }
     setState(() {});
   }
@@ -53,7 +55,7 @@ class _SubjectsState extends State<Subjects> {
                   Expanded(
                     child: Container(
                       padding: EdgeInsets.fromLTRB(18, 95, 0, 20),
-                      color: Colors.cyan,
+                      color: Colors.blue[400],
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -70,7 +72,7 @@ class _SubjectsState extends State<Subjects> {
                 child: ListView(
                   children: <Widget>[
                     ListTile(
-                      title: Text('Add Subject'),
+                      title: Text('Adicionar Matéira'),
                       onTap: () async{
                         Navigator.of(context).pop();
                         addSubjectForm().then((onValue){
@@ -79,7 +81,7 @@ class _SubjectsState extends State<Subjects> {
                       },
                     ),
                     ListTile(
-                      title: Text('Remove Subject'),
+                      title: Text('Remover Matéria'),
                       onTap: (){
                         Navigator.of(context).pop();
                         if(_subjects[0] != 'Empty'){
@@ -90,7 +92,7 @@ class _SubjectsState extends State<Subjects> {
                       },
                     ),
                     ListTile(
-                      title: Text('Account Settings'),
+                      title: Text('Configurações de Conta'),
                       onTap: (){
                         Navigator.of(context).pop();
                         Navigator.of(context).pushNamed('/accountSettings');
@@ -111,7 +113,7 @@ class _SubjectsState extends State<Subjects> {
                   Container(
                     padding: EdgeInsets.fromLTRB(45, 60, 30, 50),
                     decoration: BoxDecoration(
-                        color: Colors.cyan,
+                        color: Colors.blue[400],
                         // borderRadius: BorderRadius.only(
                         //     bottomLeft: Radius.circular(50),
                         //     bottomRight: Radius.circular(50)
@@ -119,7 +121,7 @@ class _SubjectsState extends State<Subjects> {
                     ),
                     child: Row(
                       children: <Widget>[
-                        Expanded(child: Text('Grupos', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
+                        Expanded(child: Text('Matérias', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
@@ -127,8 +129,8 @@ class _SubjectsState extends State<Subjects> {
                               borderRadius: BorderRadius.all(Radius.circular(50))
                           ),
                           child: FlatButton.icon(
-                            label: Text('Sair', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
+                            label: Text('Sair', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                            icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                             onPressed: () async {
                               dynamic result = await Account().signOut();
                               if (result == null) {
@@ -160,14 +162,15 @@ class _SubjectsState extends State<Subjects> {
                               decoration: authInputFormatting.copyWith(hintText: "Buscar"),
                               onChanged: (val){
                                 setState(() {
-                                  _subjectsVisible = _subjects.where((subject) => subject.toLowerCase().contains(val.toLowerCase())).toList();
+                                  _search = val;
+                                  _subjectsVisible = _subjects.where((subject) => subject.toLowerCase().contains(_search.toLowerCase())).toList();
                                 });
                               },
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.menu, color: Colors.cyan),
+                          icon: Icon(Icons.menu, color: Colors.blue[400]),
                           onPressed: () async{
                             _scaffoldKey.currentState.openEndDrawer();
                           },
@@ -230,13 +233,13 @@ class _SubjectsState extends State<Subjects> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
                                       SizedBox(height: 30,),
-                                      Text('Are you sure you want to delete ${_subjectsVisible[index]} ? This action can\'t be reverted.', textAlign: TextAlign.justify,),
+                                      Text('Você realmente deseja deletar a matéria ${_subjectsVisible[index]} ? Está ação não pode ser revertida.', textAlign: TextAlign.justify,),
                                       SizedBox(height: 20,),
                                       Row(
                                         children: <Widget>[
                                           Expanded(
                                             child: FlatButton(
-                                              child: Text('Cancel', style: TextStyle(color: Colors.cyan),),
+                                              child: Text('Cancelar', style: TextStyle(color: Colors.blue[400]),),
                                               onPressed: (){
                                                 Navigator.of(context).pop();
                                               },
@@ -244,14 +247,14 @@ class _SubjectsState extends State<Subjects> {
                                           ),
                                           Expanded(
                                             child: FlatButton(
-                                              child: Text('Delete', style: TextStyle(color: Colors.cyan),),
+                                              child: Text('Deletar', style: TextStyle(color: Colors.blue[400]),),
                                               onPressed: () async{
                                                 String deleted = _subjectsVisible[index];
                                                 dynamic result = await _tSAB.deleteSubject(_subjectsVisible[index]);
                                                 if(result == 'Success')
                                                 {
                                                   setState(() {
-                                                    _error = ' ';
+                                                    _errorMsg = '';
                                                     _subjectsVisible.remove(deleted);
                                                     _subjects.remove(deleted);
                                                   });
@@ -264,9 +267,11 @@ class _SubjectsState extends State<Subjects> {
                                                   Navigator.of(context).pop();
                                                 }
                                                 else{
-                                                  setState(() {
-                                                    _error = "Couldn't delete ${_subjectsVisible[index]}";
-                                                  });
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                          content: Text("Não foi possível deletar a matéria ${_subjectsVisible[index]}")
+                                                      )
+                                                  );
                                                   Navigator.of(context).pop();
                                                 }
                                               },
@@ -284,7 +289,7 @@ class _SubjectsState extends State<Subjects> {
                       },
                       title: Row(
                         children: <Widget>[
-                          Expanded(child: Text('${_subjectsVisible[index]}', style: TextStyle(color: Colors.cyan),)),
+                          Expanded(child: Text('${_subjectsVisible[index]}', style: TextStyle(color: Colors.blue[400]),)),
                           _delete ? Icon(Icons.delete, color: Colors.grey[700],) : Icon(Icons.forward, color: Colors.grey[700],)
                         ],
                       ),
@@ -313,7 +318,7 @@ class _SubjectsState extends State<Subjects> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
               decoration: BoxDecoration(
-                  color: Colors.cyan,
+                  color: Colors.blue[400],
                   borderRadius: BorderRadius.all(Radius.circular(50))
               ),
               child: Row(
@@ -321,7 +326,7 @@ class _SubjectsState extends State<Subjects> {
                 children: <Widget>[
                   Icon(Icons.add, color: Colors.white, size: 25,),
                   SizedBox(width: 10,) ,
-                  Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
+                  Text('Adicionar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
                 ],
               ),
             ),
@@ -334,20 +339,20 @@ class _SubjectsState extends State<Subjects> {
   Widget deleteButton() {
     return Column(
       children: <Widget>[
-        _error == ' ' ? Container() : Center(child: Text('$_error', style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
-        _error == ' ' ? Container() : SizedBox(height: 15,),
+        _errorMsg.isEmpty ? Container() : Center(child: Text(_errorMsg, style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
+        _errorMsg.isEmpty ? Container() : SizedBox(height: 15,),
         GestureDetector(
           onTap:(){
             setState(() {
               _delete = false;
-              _error = ' ';
+              _errorMsg = '';
             }
             );
           },
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             decoration: BoxDecoration(
-                color: Colors.cyan,
+                color: Colors.blue[400],
                 borderRadius: BorderRadius.all(Radius.circular(50))
             ),
             child: Row(
@@ -355,7 +360,7 @@ class _SubjectsState extends State<Subjects> {
               children: <Widget>[
                 Icon(Icons.add, color: Colors.white, size: 25,),
                 SizedBox(width: 10,) ,
-                Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
+                Text('Concluir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
               ],
             ),
           ),
@@ -383,8 +388,8 @@ class _SubjectsState extends State<Subjects> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            _error == ' ' ? Container() : Center(child: Text('$_error', style: TextStyle(color: Colors.red),)),
-                            _error == ' ' ? Container() : SizedBox(height: 15,),
+                            _errorMsg.isEmpty ? Container() : Center(child: Text(_errorMsg, style: TextStyle(color: Colors.red),)),
+                            _errorMsg.isEmpty ? Container() : SizedBox(height: 15,),
                             Container(
                               padding: EdgeInsets.all(10),
                               decoration: BoxDecoration(
@@ -397,23 +402,23 @@ class _SubjectsState extends State<Subjects> {
                                 )],
                               ),
                               child: TextFormField(
-                                decoration: authInputFormatting.copyWith(hintText: 'Add Subject Name'),
-                                validator: (val) => val.isEmpty ? 'Subject Name Can\'t Be Empty' : null,
+                                decoration: authInputFormatting.copyWith(hintText: 'Nome da matéria'),
+                                validator: (val) => val.isEmpty ? 'Nome da matéria não pode ficar em branco' : null,
                                 onChanged: (val) => _subject = val,
                               ),
                             ),
                             SizedBox(height: 15,),
-                            adding ? Center(child: Text("Adding ..."),) : Row(
+                            adding ? Center(child: Text("Adicionando ..."),) : Row(
                               children: <Widget>[
                                 Expanded(
                                   child: GestureDetector(
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                                       decoration: BoxDecoration(
-                                        color: Colors.cyan,
+                                        color: Colors.blue[400],
                                         borderRadius: BorderRadius.all(Radius.circular(20)),
                                       ),
-                                      child: Center(child: Text("Add", style: TextStyle(color: Colors.white),)),
+                                      child: Center(child: Text("Adicionar", style: TextStyle(color: Colors.white),)),
                                     ),
                                     onTap: () async{
                                       if(_formKey.currentState.validate())
@@ -424,9 +429,14 @@ class _SubjectsState extends State<Subjects> {
                                         if(_subjects.contains(_subject))
                                         {
                                           setState(() {
-                                            _error = "Subject Already Present";
                                             adding = false;
                                           });
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                  content: Text('Matéria já existe.')
+                                              )
+                                          );
                                         }
                                         else
                                         {
@@ -434,9 +444,14 @@ class _SubjectsState extends State<Subjects> {
                                           if(result ==  null)
                                           {
                                             setState(() {
-                                              _error = "Something Went Wrong, Couldn't Add Subject";
                                               adding = false;
                                             });
+
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content: Text('Algo deu errado, não foi possível adicionar a matéria.')
+                                                )
+                                            );
                                           }
                                           else
                                           {
@@ -444,14 +459,14 @@ class _SubjectsState extends State<Subjects> {
                                               setState((){
                                                 _subjects.clear();
                                                 _subjects.add(_subject);
-                                                _error = ' ';
+                                                _errorMsg = '';
                                                 adding = false;
                                               });
                                             }
                                             else{
                                               setState((){
                                                 _subjects.add(_subject);
-                                                _error = ' ';
+                                                _errorMsg = '';
                                                 adding = false;
                                               });
                                             }
@@ -467,14 +482,14 @@ class _SubjectsState extends State<Subjects> {
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                                       decoration: BoxDecoration(
-                                        color: Colors.cyan,
+                                        color: Colors.blue[400],
                                         borderRadius: BorderRadius.all(Radius.circular(20)),
                                       ),
-                                      child: Center(child: Text("Done", style: TextStyle(color: Colors.white),)),
+                                      child: Center(child: Text("Concluir", style: TextStyle(color: Colors.white),)),
                                     ),
                                     onTap: () {
                                       setState(() {
-                                        _error = ' ';
+                                        _errorMsg = ' ';
                                       });
                                       Navigator.of(context).pop();
                                     },
