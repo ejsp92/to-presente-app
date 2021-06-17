@@ -1,6 +1,6 @@
-import 'package:attendanceapp/services/account.dart';
-import 'package:attendanceapp/services/firestore.dart';
-import 'package:attendanceapp/pages/shared/formatting.dart';
+import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:enhanced_future_builder/enhanced_future_builder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +28,7 @@ class _StudentHomeState extends State<StudentHome> {
     _enrollmentDetailsVisible = Map.from(_enrollmentDetails)..removeWhere((key, value) => !value['active']);
     _keys = _enrollmentDetailsVisible.keys.toList();
 
-    userName = await UserDataBase(user).userName();
+    userName = await UserDatabase(user).userName();
     if(userName == null){
       userName = 'Can\'t Get Name';
     }

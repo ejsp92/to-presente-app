@@ -1,6 +1,6 @@
 import 'dart:ui';
-import 'package:attendanceapp/services/firestore.dart';
-import 'package:attendanceapp/pages/shared/formatting.dart';
+import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:enhanced_future_builder/enhanced_future_builder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';

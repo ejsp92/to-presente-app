@@ -1,6 +1,6 @@
-import 'package:attendanceapp/services/account.dart';
-import 'package:attendanceapp/services/firestore.dart';
-import 'package:attendanceapp/pages/shared/formatting.dart';
+import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
@@ -215,7 +215,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                   child: GestureDetector(
                     onTap: () async {
                       if (_formKey.currentState.validate()) {
-                        dynamic result = await UserDataBase(Provider.of<
+                        dynamic result = await UserDatabase(Provider.of<
                             FirebaseUser>(context, listen: false))
                             .updateUserName(firstName, lastName);
                         if (result != null) {

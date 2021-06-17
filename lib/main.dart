@@ -9,7 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:attendanceapp/pages/logged_out/authentication.dart';
 import 'package:provider/provider.dart';
-import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/user.dart';
 import 'package:flutter/services.dart';
 
 void main() => runApp(LoginApp());

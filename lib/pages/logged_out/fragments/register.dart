@@ -1,9 +1,19 @@
-import 'package:attendanceapp/services/account.dart';
-import 'package:attendanceapp/services/firestore.dart';
-import 'package:attendanceapp/pages/shared/formatting.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'dart:math' as math;
+import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/ml_kit.dart';
+import 'package:attendanceapp/services/camera.dart';
+import 'package:attendanceapp/services/facenet.dart';
+import 'package:attendanceapp/pages/components/formatting.dart';
+import 'package:attendanceapp/pages/components/face_painter.dart';
+import 'package:attendanceapp/pages/components/camera_header.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'dart:developer';
 
 class Register extends StatefulWidget {
@@ -22,21 +32,302 @@ class _RegisterState extends State<Register> {
   List<String> _types = ['', 'Professor', 'Estudante'];
   bool loading = false;
   String errorMsg = '';
-  Widget _currentForm;
+  int _currentFragment = 0;
+
+  String imagePath;
+  Face faceDetected;
+  Size imageSize;
+
+  bool _detectingFaces = false;
+
+  Future _initializeControllerFuture;
+  bool cameraInitializated = false;
+  CameraDescription cameraDescription;
+
+  // switchs when the user press the camera
+  bool _cameraVisible = false;
+  bool _savingFace = false;
+
+  // service injection
+  MLKitService _mlKitService = MLKitService();
+  CameraService _cameraService = CameraService();
+  FaceNetService _faceNetService = FaceNetService();
 
   @override
   void initState() {
     super.initState();
-    _currentForm = _registerNameEmail();
+    _currentFragment = 0;
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the controller when the widget is disposed.
+    _cameraService.dispose();
+    super.dispose();
+  }
+
+  /// starts the camera & start framing faces
+  _startCamera() async {
+    setState(() {
+      errorMsg = '';
+      loading = true;
+    });
+
+    if (!cameraInitializated) {
+      _faceNetService.loadModel();
+      _mlKitService.initialize();
+
+      if (cameraDescription == null) {
+        List<CameraDescription> cameras = await availableCameras();
+
+        /// takes the front camera
+        cameraDescription = cameras.firstWhere(
+              (CameraDescription camera) =>
+          camera.lensDirection == CameraLensDirection.front,
+        );
+      }
+
+      _initializeControllerFuture =
+          _cameraService.startService(cameraDescription);
+      await _initializeControllerFuture;
+
+      setState(() {
+        cameraInitializated = true;
+      });
+
+      _frameFaces();
+    }
+
+    setState(() {
+      loading = false;
+      _cameraVisible = true;
+    });
+  }
+
+  Future<bool> onTakePicture() async {
+    if (faceDetected == null) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Nenhum rosto detectado. Centralize seu resto na camera e tente novamente.'),
+          );
+        },
+      );
+
+      return false;
+    } else {
+      _savingFace = true;
+      await Future.delayed(Duration(milliseconds: 500));
+      await _cameraService.cameraController.stopImageStream();
+      await Future.delayed(Duration(milliseconds: 200));
+      XFile file = await _cameraService.takePicture();
+      imagePath = file.path;
+
+      return true;
+    }
+  }
+
+  /// draws rectangles when detects faces
+  _frameFaces() {
+    imageSize = _cameraService.getImageSize();
+
+    _cameraService.cameraController.startImageStream((image) async {
+      if (_cameraService.cameraController != null) {
+        // if its currently busy, avoids overprocessing
+        if (_detectingFaces) return;
+
+        _detectingFaces = true;
+
+        try {
+          List<Face> faces = await _mlKitService.getFacesFromImage(image);
+
+          if (faces.length > 0) {
+            setState(() {
+              faceDetected = faces[0];
+            });
+
+            if (_savingFace) {
+              _faceNetService.setCurrentPrediction(image, faceDetected);
+              setState(() {
+                studentFaceId = json.encode(_faceNetService.predictedData);
+                _savingFace = false;
+              });
+              _closeCamera();
+            }
+          } else {
+            setState(() {
+              faceDetected = null;
+            });
+          }
+
+          _detectingFaces = false;
+        } catch (e) {
+          print(e);
+          _detectingFaces = false;
+        }
+      }
+    });
+  }
+
+  _cancelCamera() async {
+    await _cameraService.cameraController.stopImageStream();
+    _closeCamera();
+  }
+
+  _closeCamera() {
+    setState(() {
+      _cameraVisible = false;
+      cameraInitializated = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return loading ? AuthLoading(185, 20) : Column(
+    return _cameraVisible ? _camera() : _registration();
+  }
+
+  Widget _camera() {
+    final width = MediaQuery.of(context).size.width;
+    return Scaffold(
+        body: Stack(
+          children: [
+            FutureBuilder<void>(
+              future: _initializeControllerFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Transform.scale(
+                    scale: 1.0,
+                    child: AspectRatio(
+                      aspectRatio: MediaQuery.of(context).size.aspectRatio,
+                      child: OverflowBox(
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Container(
+                            width: width,
+                            height: width *
+                                _cameraService
+                                    .cameraController.value.aspectRatio,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: <Widget>[
+                                CameraPreview(
+                                    _cameraService.cameraController),
+                                CustomPaint(
+                                  painter: FacePainter(
+                                      face: faceDetected,
+                                      imageSize: imageSize),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+            CameraHeader(
+              'IDENTIFICAÇÃO FACIAL',
+              onBackPressed: _cancelCamera,
+            )
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: GestureDetector(
+          onTap: () async {
+            try {
+              // Ensure that the camera is initialized.
+              await _initializeControllerFuture;
+              // onShot event (takes the image and predict output)
+              await onTakePicture();
+            } catch (e) {
+              // If an error occurs, log the error to the console.
+              print(e);
+            }
+          },
+          child: Container(
+            height: 50,
+            margin: EdgeInsets.symmetric(horizontal: 50),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              color: Colors.blue[400],
+            ),
+            child: Center(
+              child: Text("Capturar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+            ),
+          ),
+        )
+    );
+  }
+
+  Widget _registration() {
+    return Scaffold(
+      backgroundColor: Colors.blue,
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                colors: [
+                  Colors.blue[900],
+                  Colors.blue[400],
+                  Colors.blue[200]
+                ]
+            )
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35, 70, 15, 0),
+              child: Text('Cadastrar.', style: TextStyle(color: Colors.white, fontSize: 50, letterSpacing: 2, fontWeight: FontWeight.bold),),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(38, 0, 15, 0),
+              child: Text('Seja bem-vindo!', style: TextStyle(color: Colors.white, fontSize: 22,),),
+            ),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.fromLTRB(0, 70, 0, 0),
+                padding: const EdgeInsets.fromLTRB(15, 20, 15, 0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  // borderRadius: BorderRadius.only(
+                  //     topLeft: Radius.circular(50), topRight: Radius.circular(50))
+                ),
+                child: ListView(
+                  children: <Widget>[
+                    loading ? AuthLoading(185, 20) : _form(),
+                    SizedBox(height: 50,)
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _form() {
+    Widget currentForm;
+    if (_currentFragment == 1) {
+      currentForm = _registerPasswordType();
+    } else if (_currentFragment == 2) {
+      currentForm = _registerFaceId();
+    } else {
+      currentForm = _registerNameEmail();
+    }
+
+    return Column(
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 45, 0, 5),
-          child: _currentForm,
+          child: currentForm,
         ),
         SizedBox(height: 30,),
         GestureDetector(
@@ -193,12 +484,12 @@ class _RegisterState extends State<Register> {
                   if (type == 'Estudante') {
                     setState(() {
                       errorMsg = '';
-                      _currentForm = _registerFaceId();
+                      _currentFragment = 2;
                     });
                   } else {
                     setState(() {
                       errorMsg = '';
-                      _currentForm = _registerPasswordType();
+                      _currentFragment = 1;
                     });
                   }
                 }
@@ -250,13 +541,13 @@ class _RegisterState extends State<Register> {
                     decoration: authInputFormatting.copyWith(hintText: "Email do professor"),
                     validator: _account.validateId,
                     onChanged: (val) {
-                      log('data: $userEmail');
                       teacherEmail = val;
                     },
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+                    _startCamera();
                   },
                   child: Container(
                     padding: EdgeInsets.fromLTRB(10.0, 20.0, 10.0, 20.0),
@@ -270,7 +561,7 @@ class _RegisterState extends State<Register> {
                         Icon(Icons.camera_alt, color: studentFaceId == null || studentFaceId.isEmpty ? Colors.grey[400] : Colors.blue[400], size: 30.0,),
                         Container(
                             padding: EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
-                            child: Text("Registrar face", style: Theme.of(context).textTheme.bodyText1.copyWith(color: studentFaceId == null || studentFaceId.isEmpty ? Colors.grey[400] : Colors.blue[400]),),
+                            child: Text("Registrar identificação facial", style: Theme.of(context).textTheme.bodyText1.copyWith(color: studentFaceId == null || studentFaceId.isEmpty ? Colors.grey[400] : Colors.blue[400]),),
                         ),
                       ]
                     ),
@@ -290,7 +581,7 @@ class _RegisterState extends State<Register> {
                   onTap: () {
                     setState(() {
                       errorMsg = '';
-                      _currentForm = _registerNameEmail();
+                      _currentFragment = 0;
                     });
                   },
                   child: Container(
@@ -314,7 +605,6 @@ class _RegisterState extends State<Register> {
                       if (studentFaceId == null || studentFaceId.isEmpty) {
                         setState(() {
                           errorMsg = 'Registre sua face para continuar';
-                          _currentForm = _registerFaceId();
                         });
                         return;
                       }
@@ -352,7 +642,6 @@ class _RegisterState extends State<Register> {
                       //     type = '';
                       //     loading = false;
                       //     error = 'Por favor, informe um email válido';
-                      //     _currentForm = _registerNameEmail();
                       //   });
                       // }
                     }
@@ -423,7 +712,7 @@ class _RegisterState extends State<Register> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      _currentForm = _registerNameEmail();
+                      _currentFragment = 0;
                     });
                   },
                   child: Container(
@@ -451,8 +740,8 @@ class _RegisterState extends State<Register> {
                       String userType = type == 'Professor' ? 'teacher' : 'student';
                       FirebaseUser user = await _account.register(userEmail, userPass);
                       if (user != null) {
-                        UserDataBase userData = UserDataBase(user) ;
-                        dynamic userDataSet = await userData.newUserData(userFirstName, userLastName, userType);
+                        UserDatabase userData = UserDatabase(user) ;
+                        dynamic userDataSet = await userData.newUserData(userFirstName, userLastName, userType, null, null);
                         bool isEmailVerified = user.isEmailVerified;
                         if (userDataSet != null) {
                           dynamic type = await userData.userType();
@@ -477,7 +766,6 @@ class _RegisterState extends State<Register> {
                           type = '';
                           loading = false;
                           errorMsg = "Por favor, informe um email válido";
-                          _currentForm = _registerNameEmail();
                         });
                       }
                     }

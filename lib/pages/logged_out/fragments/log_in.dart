@@ -1,6 +1,6 @@
-import 'package:attendanceapp/services/account.dart';
-import 'package:attendanceapp/services/firestore.dart';
-import 'package:attendanceapp/pages/shared/formatting.dart';
+import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -24,11 +24,59 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context){
-    return loginForm();
+    return _login();
   }
 
-  Widget loginForm(){
-    return _loading ? AuthLoading(185, 20) : Column(
+  Widget _login() {
+    return Scaffold(
+      backgroundColor: Colors.blue,
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                colors: [
+                  Colors.blue[900],
+                  Colors.blue[400],
+                  Colors.blue[200]
+                ]
+            )
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35, 70, 15, 0),
+              child: Text('Login.', style: TextStyle(color: Colors.white, fontSize: 50, letterSpacing: 2, fontWeight: FontWeight.bold),),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(38, 0, 15, 0),
+              child: Text('Bem-vindo de volta!', style: TextStyle(color: Colors.white, fontSize: 22,),),
+            ),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.fromLTRB(0, 70, 0, 0),
+                padding: const EdgeInsets.fromLTRB(15, 20, 15, 0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  // borderRadius: BorderRadius.only(
+                  //     topLeft: Radius.circular(50), topRight: Radius.circular(50))
+                ),
+                child: ListView(
+                  children: <Widget>[
+                    _loading ? AuthLoading(185, 20) : _form(),
+                    SizedBox(height: 50,)
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _form(){
+    return Column(
       children: <Widget>[
         Form(
           key: _formKey,
@@ -90,7 +138,7 @@ class _LoginState extends State<Login> {
                       if(user != null)
                       {
                         bool isEmailVerified = user.isEmailVerified;
-                        dynamic type = await UserDataBase(user).userType();
+                        dynamic type = await UserDatabase(user).userType();
                         if(type != null){
                           Navigator.of(context).pushReplacementNamed('/home', arguments: {'type' : type, 'isEmailVerified' : isEmailVerified});
                         }
