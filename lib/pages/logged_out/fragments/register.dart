@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/services/ml_kit.dart';
 import 'package:attendanceapp/services/camera.dart';
 import 'package:attendanceapp/services/facenet.dart';
@@ -17,14 +17,14 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 import 'dart:developer';
 
 class Register extends StatefulWidget {
-  final ValueChanged<bool> updateTitle;
-  Register(this.updateTitle);
+  final ValueChanged<bool> updateFragment;
+  Register(this.updateFragment);
   @override
   _RegisterState createState() => _RegisterState();
 }
 
 class _RegisterState extends State<Register> {
-  final User _account = User();
+  final Account _account = Account();
   final _formKey = GlobalKey<FormState>();
 
   String userEmail, userPass, userFirstName, userLastName, teacherEmail, studentFaceId;
@@ -106,13 +106,10 @@ class _RegisterState extends State<Register> {
 
   Future<bool> onTakePicture() async {
     if (faceDetected == null) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: Text('Nenhum rosto detectado. Centralize seu resto na camera e tente novamente.'),
-          );
-        },
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Nenhum rosto detectado. Centralize seu rosto na camera e tente novamente.')
+          )
       );
 
       return false;
@@ -331,7 +328,7 @@ class _RegisterState extends State<Register> {
         ),
         SizedBox(height: 30,),
         GestureDetector(
-          onTap: () => widget.updateTitle(true),
+          onTap: () => widget.updateFragment(true),
           child: Container(
             height: 50,
             margin: EdgeInsets.symmetric(horizontal: 70),
@@ -604,46 +601,49 @@ class _RegisterState extends State<Register> {
                     if (_formKey.currentState.validate()) {
                       if (studentFaceId == null || studentFaceId.isEmpty) {
                         setState(() {
-                          errorMsg = 'Registre sua face para continuar';
+                          errorMsg = 'Registre sua identificação facial antes de continuar';
                         });
                         return;
                       }
 
-                      // setState(() {
-                      //   error = '';
-                      //   loading = true;
-                      // });
-                      // String userType = type == 'Professor' ? 'teacher' : 'student';
-                      // FirebaseUser user = await _account.register(userEmail, userPass);
-                      // if (user != null) {
-                      //   UserDataBase userData = UserDataBase(user) ;
-                      //   dynamic userDataSet = await userData.newUserData(userFirstName, userLastName, userType);
-                      //   bool isEmailVerified = user.isEmailVerified;
-                      //   if (userDataSet != null) {
-                      //     dynamic type = await userData.userType();
-                      //     if(type != null){
-                      //       Navigator.of(context).pushReplacementNamed('/home', arguments: {'type' : type, 'isEmailVerified' : isEmailVerified});
-                      //     } else{
-                      //       await _account.signOut();
-                      //       setState(() {
-                      //         loading = false;
-                      //         error = 'Não foi possível identificar o tipo de usuário';
-                      //       });
-                      //     }
-                      //   } else {
-                      //     await _account.deleteUser();
-                      //     setState(() {
-                      //       loading = false;
-                      //       error = 'Não foi possível adicionar os dados do usuário na base de dados';
-                      //     });
-                      //   }
-                      // } else {
-                      //   setState(() {
-                      //     type = '';
-                      //     loading = false;
-                      //     error = 'Por favor, informe um email válido';
-                      //   });
-                      // }
+                      setState(() {
+                        errorMsg = '';
+                        loading = true;
+                      });
+
+                      Student student = Student();
+                      String result = await student.addStudent(teacherEmail, userFirstName, userLastName, userEmail, studentFaceId);
+                      if (result != null) {
+                        if(result == 'Success'){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Seu cadastro foi enviado ao professor.')
+                              )
+                          );
+
+                          widget.updateFragment(true);
+                        } else if (result == 'Teacher not found') {
+                          setState(() {
+                            loading = false;
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Não existe um professor com o email informado na base de dados.')
+                              )
+                          );
+                        }
+                      } else {
+                        setState(() {
+                          loading = false;
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Não foi possível adicionar os dados do usuário na base de dados. Tente novamente.')
+                            )
+                        );
+                      }
                     }
                   },
                   child: Container(
@@ -737,36 +737,51 @@ class _RegisterState extends State<Register> {
                         errorMsg = '';
                         loading = true;
                       });
-                      String userType = type == 'Professor' ? 'teacher' : 'student';
+
+                      String userType = 'teacher';
                       FirebaseUser user = await _account.register(userEmail, userPass);
                       if (user != null) {
-                        UserDatabase userData = UserDatabase(user) ;
-                        dynamic userDataSet = await userData.newUserData(userFirstName, userLastName, userType, null, null);
+                        User userData = User(user) ;
+                        String result = await userData.addUserData(userFirstName, userLastName, userType);
                         bool isEmailVerified = user.isEmailVerified;
-                        if (userDataSet != null) {
-                          dynamic type = await userData.userType();
+                        if (result != null) {
+                          String type = await userData.userType();
                           if(type != null){
                             Navigator.of(context).pushReplacementNamed('/home', arguments: {'type' : type, 'isEmailVerified' : isEmailVerified});
                           } else{
                             await _account.signOut();
                             setState(() {
                               loading = false;
-                              errorMsg = 'Não foi possível identificar o tipo de usuário';
                             });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Não foi possível identificar o tipo de usuário. Tente novamente.')
+                                )
+                            );
                           }
                         } else {
-                          await _account.deleteUser();
+                          await _account.delete();
                           setState(() {
                             loading = false;
-                            errorMsg = "Não foi possível adicionar os dados do usuário na base de dados";
                           });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Não foi possível salvar os dados do usuário. Tente novamente.')
+                              )
+                          );
                         }
                       } else {
                         setState(() {
-                          type = '';
                           loading = false;
-                          errorMsg = "Por favor, informe um email válido";
                         });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Email é inválido ou usuário já existe. Por favor, informe um email válido.')
+                            )
+                        );
                       }
                     }
                   },

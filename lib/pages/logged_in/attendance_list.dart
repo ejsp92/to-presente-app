@@ -1,5 +1,5 @@
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:enhanced_future_builder/enhanced_future_builder.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,7 @@ class _AttendanceListState extends State<AttendanceList> {
                             label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
                             icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
                             onPressed: () async {
-                              dynamic result = await User().signOut();
+                              dynamic result = await Account().signOut();
                               if (result == null) {
                                 Navigator.of(context).pushReplacementNamed('/authentication');
                               }

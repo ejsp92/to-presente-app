@@ -1,5 +1,5 @@
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,13 +13,13 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final User _account = User();
+  final Account _account = Account();
   final _formKey = GlobalKey<FormState>();
 
 
   String _email;
   String _pass;
-  String _error = '';
+  String _errorMsg = '';
   bool _loading = false;
 
   @override
@@ -102,7 +102,8 @@ class _LoginState extends State<Login> {
                             border: Border(bottom: BorderSide(color: Colors.grey[200]))
                         ),
                         child: TextFormField(
-                          decoration: authInputFormatting.copyWith(hintText: "Enter Email"),
+                          initialValue: _email,
+                          decoration: authInputFormatting.copyWith(hintText: "Email"),
                           validator: _account.validateId,
                           onChanged: (val){
                             _email = val;
@@ -115,7 +116,8 @@ class _LoginState extends State<Login> {
                             border: Border(bottom: BorderSide(color: Colors.grey[200]))
                         ),
                         child: TextFormField(
-                          decoration: authInputFormatting.copyWith(hintText: "Enter Password"),
+                          initialValue: _pass,
+                          decoration: authInputFormatting.copyWith(hintText: "Senha"),
                           validator: _account.validateLoginPass,
                           obscureText: true,
                           onChanged: (val){
@@ -127,7 +129,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 SizedBox(height: 30,),
-                Text(_error, style: TextStyle(color: Colors.red),),
+                Text(_errorMsg, style: TextStyle(color: Colors.red),),
                 SizedBox(height: 30,),
                 GestureDetector(
                   onTap: () async{
@@ -138,7 +140,7 @@ class _LoginState extends State<Login> {
                       if(user != null)
                       {
                         bool isEmailVerified = user.isEmailVerified;
-                        dynamic type = await UserDatabase(user).userType();
+                        dynamic type = await User(user).userType();
                         if(type != null){
                           Navigator.of(context).pushReplacementNamed('/home', arguments: {'type' : type, 'isEmailVerified' : isEmailVerified});
                         }
@@ -146,16 +148,26 @@ class _LoginState extends State<Login> {
                           await _account.signOut();
                           setState(() {
                             _loading = false;
-                            _error = 'Couldn\'t get user type, try again';
                           });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Não foi possível identificar o tipo de usuário. Tente novamente.')
+                              )
+                          );
                         }
                       }
                       else
                       {
                         setState(() {
                           _loading = false;
-                          _error = 'Email and/or password is incorrect';
                         });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Email ou senha inválida.')
+                            )
+                        );
                       }
                     }
                   },
@@ -164,7 +176,7 @@ class _LoginState extends State<Login> {
                     margin: EdgeInsets.symmetric(horizontal: 50),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(50),
-                      color: Colors.cyan,
+                      color: Colors.blue[400],
                     ),
                     child: Center(
                       child: Text("Login", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
@@ -183,10 +195,10 @@ class _LoginState extends State<Login> {
             margin: EdgeInsets.symmetric(horizontal: 70),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(50),
-              color: Colors.cyan[300],
+              color: Colors.grey[400],
             ),
             child: Center(
-              child: Text("Register", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+              child: Text("Cadastro", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
             ),
           ),
         ),

@@ -1,15 +1,15 @@
 import 'package:attendanceapp/pages/logged_in/home.dart';
-import 'package:attendanceapp/pages/logged_in/teacher/add_students.dart';
-import 'package:attendanceapp/pages/logged_in/teacher/attendance.dart';
-import 'package:attendanceapp/pages/logged_in/teacher/batches.dart';
-import 'package:attendanceapp/pages/logged_in/teacher/students.dart';
+import 'package:attendanceapp/pages/logged_in/add_students.dart';
+import 'package:attendanceapp/pages/logged_in/attendance.dart';
+import 'package:attendanceapp/pages/logged_in/batches.dart';
+import 'package:attendanceapp/pages/logged_in/students.dart';
 import 'package:attendanceapp/pages/logged_in/account_settings.dart';
 import 'package:attendanceapp/pages/logged_in/attendance_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:attendanceapp/pages/logged_out/authentication.dart';
 import 'package:provider/provider.dart';
-import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/account.dart';
 import 'package:flutter/services.dart';
 
 void main() => runApp(LoginApp());
@@ -24,7 +24,7 @@ class LoginApp extends StatelessWidget {
     ]);
 
     return StreamProvider<FirebaseUser>.value(
-      value: User().account,
+      value: Account().account,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Attendance App ',

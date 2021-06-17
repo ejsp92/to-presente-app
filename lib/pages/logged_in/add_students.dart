@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:enhanced_future_builder/enhanced_future_builder.dart';
 import 'package:firebase_auth/firebase_auth.dart';

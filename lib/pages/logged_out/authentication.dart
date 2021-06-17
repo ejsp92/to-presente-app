@@ -18,50 +18,5 @@ class _AuthenticationState extends State<Authentication> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return _login ? Login(_updateFragment) : Register(_updateFragment);
-    // return Scaffold(
-    //   backgroundColor: Colors.blue,
-    //   body: Container(
-    //     decoration: BoxDecoration(
-    //         gradient: LinearGradient(
-    //             begin: Alignment.topLeft,
-    //             colors: [
-    //               Colors.blue[900],
-    //               Colors.blue[400],
-    //               Colors.blue[200]
-    //             ]
-    //         )
-    //     ),
-    //     child: Column(
-    //       crossAxisAlignment: CrossAxisAlignment.start,
-    //       children: <Widget>[
-    //         Padding(
-    //           padding: const EdgeInsets.fromLTRB(35, 70, 15, 0),
-    //           child: Text('${_login ? 'Login.' : 'Cadastrar.'}', style: TextStyle(color: Colors.white, fontSize: 50, letterSpacing: 2, fontWeight: FontWeight.bold),),
-    //         ),
-    //         Padding(
-    //           padding: const EdgeInsets.fromLTRB(38, 0, 15, 0),
-    //           child: Text('${_login ? 'Bem-vindo de volta!' : 'Seja bem-vindo!'}', style: TextStyle(color: Colors.white, fontSize: 22,),),
-    //         ),
-    //         Expanded(
-    //           child: Container(
-    //             margin: EdgeInsets.fromLTRB(0, 70, 0, 0),
-    //             padding: const EdgeInsets.fromLTRB(15, 20, 15, 0),
-    //             decoration: BoxDecoration(
-    //                 color: Colors.white,
-    //                 // borderRadius: BorderRadius.only(
-    //                 //     topLeft: Radius.circular(50), topRight: Radius.circular(50))
-    //             ),
-    //             child: ListView(
-    //               children: <Widget>[
-    //                 _login ? Login(_updateTitle) : Register(_updateTitle),
-    //                 SizedBox(height: 50,)
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
   }
 }

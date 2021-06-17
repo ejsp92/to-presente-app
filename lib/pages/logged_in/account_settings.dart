@@ -1,5 +1,5 @@
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                             icon: Icon(Icons.exit_to_app, color: Colors.cyan,
                               size: 15,),
                             onPressed: () async {
-                              dynamic result = await User().signOut();
+                              dynamic result = await Account().signOut();
                               if (result == null) {
                                 Navigator.of(context).pushReplacementNamed(
                                     '/authentication');
@@ -215,7 +215,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                   child: GestureDetector(
                     onTap: () async {
                       if (_formKey.currentState.validate()) {
-                        dynamic result = await UserDatabase(Provider.of<
+                        dynamic result = await User(Provider.of<
                             FirebaseUser>(context, listen: false))
                             .updateUserName(firstName, lastName);
                         if (result != null) {
@@ -324,7 +324,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
                           hintText: "Old Password"),
-                      validator: User().validateRegisterPass,
+                      validator: Account().validateRegisterPass,
                       obscureText: true,
                       onChanged: (val) {
                         oldPass = val;
@@ -340,7 +340,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
                           hintText: "New Password"),
-                      validator: User().validateRegisterPass,
+                      validator: Account().validateRegisterPass,
                       obscureText: true,
                       onChanged: (val) {
                         newPass = val;
@@ -357,7 +357,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                   child: GestureDetector(
                     onTap: () async {
                       if (_formKey.currentState.validate()) {
-                        dynamic result = await User().resetPassword(oldPass, newPass);
+                        dynamic result = await Account().resetPassword(oldPass, newPass);
                         if(result != null){
                           setState(() {
                             _status = {

@@ -1,34 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class UserDatabase {
+class User {
 
   final FirebaseUser user;
-  UserDatabase(this.user);
+  User(this.user);
 
-  final CollectionReference _userData = Firestore.instance.collection('users');
+  final CollectionReference _users = Firestore.instance.collection('users');
 
-  Future<String> newUserData(String firstName, String lastName, String type, String teacherEmail, String faceId) async {
+  Future<String> addUserData(String firstName, String lastName, String type) async {
     try {
-      String teacherUid;
-
-      if (type == 'student') {
-        await _userData.document(teacherEmail).get().then((DocumentSnapshot ds) {
-          teacherUid = ds.data['uid'];
-        });
-        if (teacherUid == null) return 'Teacher not found';
-      }
-
       Map<String, dynamic> data = {
         'fistName' : firstName,
         'lastName' : lastName,
         'type' : type,
-        'faceId' : faceId,
-        'teacherUid' : teacherUid,
         'uid' : user.uid,
       };
 
-      await _userData.document(user.email).setData(data);
+      await _users.document(user.email).setData(data);
       return 'Success';
     }
     catch(e){
@@ -39,7 +28,7 @@ class UserDatabase {
 
   Future userType() async{
     DocumentSnapshot data;
-    await _userData.document(user.email).get().then((DocumentSnapshot ds){
+    await _users.document(user.email).get().then((DocumentSnapshot ds){
       data = ds;
     });
     return data.data['type'];
@@ -48,7 +37,7 @@ class UserDatabase {
   Future userName() async{
    try{
      DocumentSnapshot data;
-     await _userData.document(user.email).get().then((DocumentSnapshot ds){
+     await _users.document(user.email).get().then((DocumentSnapshot ds){
        data = ds;
      });
      return (data.data['fistName'].toString() + " " + data.data['lastName'].toString());
@@ -61,7 +50,7 @@ class UserDatabase {
 
   Future<String> updateUserName(String firstName, String lastName) async{
     try{
-      await _userData.document(user.email).updateData({
+      await _users.document(user.email).updateData({
         'fistName' : firstName,
         'lastName' : lastName,
       });
@@ -72,6 +61,54 @@ class UserDatabase {
       return null;
     }
   }
+}
+
+class Student {
+
+  final FirebaseUser user;
+  Student({this.user});
+  
+  final CollectionReference _users = Firestore.instance.collection('users');
+  final CollectionReference _usersStudents = Firestore.instance.collection('users-students');
+  final String collectionKey = 'students';
+
+  Future<String> addStudent(String teacherEmail, String firstName, String lastName, String email, String faceId) async {
+    try {
+      String teacherUid;
+      await _users.document(teacherEmail).get().then((DocumentSnapshot ds) {
+        if (ds.exists) teacherUid = ds.data['uid'];
+      });
+      if (teacherUid == null) return 'Teacher not found';
+
+      Map<String, dynamic> data = {
+        'fistName' : firstName,
+        'lastName' : lastName,
+        'email' : email,
+        'faceId' : faceId,
+      };
+
+      await _usersStudents.document(teacherEmail).collection(collectionKey).document(email).setData(data, merge: true);
+      return 'Success';
+    } catch(e) {
+      print(e.toString());
+      return null;
+    }
+  }
+  
+  Future<List<String>> getAllStudents() async{
+    try{
+      List<Map> students = [];
+      QuerySnapshot qs = await _usersStudents.document(user.email).collection(collectionKey).getDocuments();
+      qs.documents.forEach((DocumentSnapshot ds){
+        students.add(ds.data);
+      });
+      return students.isEmpty ? [] : students;
+    } catch(e) {
+      print(e.toString());
+      return null;
+    }
+  }
+  
 }
 
 class StudentsList{

@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-class User {
+class Account {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   static final RegExp emailRegExp = RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
 
@@ -20,7 +20,6 @@ class User {
       return null;
     }
   }
-
 
   Future<FirebaseUser> login(email, pass) async{
     try {
@@ -42,7 +41,7 @@ class User {
     }
   }
 
-  Future deleteUser() async{
+  Future delete() async{
     FirebaseUser user = await _auth.currentUser();
     await user.delete();
   }

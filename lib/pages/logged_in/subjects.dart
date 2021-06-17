@@ -1,6 +1,6 @@
 import 'dart:ui';
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:enhanced_future_builder/enhanced_future_builder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,7 +34,7 @@ class _SubjectsState extends State<Subjects> {
     }
     _subjectsVisible = _subjects;
 
-    _userName = await UserDatabase(_user).userName();
+    _userName = await User(_user).userName();
     if(_userName == null){
       _userName = 'Can\'t Get Name';
     }
@@ -130,7 +130,7 @@ class _SubjectsState extends State<Subjects> {
                             label: Text('Sair', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
                             icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
                             onPressed: () async {
-                              dynamic result = await User().signOut();
+                              dynamic result = await Account().signOut();
                               if (result == null) {
                                 Navigator.of(context).pushReplacementNamed('/authentication');
                               }

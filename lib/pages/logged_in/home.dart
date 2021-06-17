@@ -1,5 +1,4 @@
-import 'package:attendanceapp/pages/logged_in/student/home.dart';
-import 'package:attendanceapp/pages/logged_in/teacher/home.dart';
+import 'package:attendanceapp/pages/logged_in/teacher_home.dart';
 import 'package:attendanceapp/pages/logged_in/verification.dart';
 import 'package:flutter/material.dart';
 
@@ -13,11 +12,9 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     Map data = ModalRoute.of(context).settings.arguments;
-    String type = data['type'];
     isEmailVerified = data['isEmailVerified'];
-    Widget homeScreen;
-    homeScreen = type == 'Student' ? StudentHome() : TeacherHome();
-    return isEmailVerified ? homeScreen : VerifyEmail();
+
+    return isEmailVerified ? TeacherHome() : VerifyEmail();
   }
 }
 

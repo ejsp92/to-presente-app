@@ -1,4 +1,4 @@
-import 'package:attendanceapp/services/user.dart';
+import 'package:attendanceapp/services/account.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +9,9 @@ class VerifyEmail extends StatefulWidget {
 }
 
 class _VerifyEmailState extends State<VerifyEmail> {
-  String _success = ' ';
+  String _msg = '';
+  bool _sent = false;
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +24,7 @@ class _VerifyEmailState extends State<VerifyEmail> {
                   Container(
                     padding: EdgeInsets.fromLTRB(5, 60, 30, 50),
                     decoration: BoxDecoration(
-                        color: Colors.cyan,
+                        color: Colors.blue[400],
                         borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(50),
                             bottomRight: Radius.circular(50)
@@ -31,7 +33,7 @@ class _VerifyEmailState extends State<VerifyEmail> {
                     child: Row(
                       children: <Widget>[
                         BackButton(color: Colors.white70,),
-                        Expanded(child: Text('Email Verification', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
+                        Expanded(child: Text('Verificação de Email', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
@@ -39,10 +41,10 @@ class _VerifyEmailState extends State<VerifyEmail> {
                               borderRadius: BorderRadius.all(Radius.circular(50))
                           ),
                           child: FlatButton.icon(
-                            label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
+                            label: Text('Sair', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                            icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                             onPressed: () async {
-                              dynamic result = await User().signOut();
+                              dynamic result = await Account().signOut();
                               if (result == null) {
                                 Navigator.of(context).pushReplacementNamed('/authentication');
                               }
@@ -62,10 +64,10 @@ class _VerifyEmailState extends State<VerifyEmail> {
                   child: Center(
                     child: Column(
                       children: <Widget>[
-                        _success == ' ' ? Container() : Center(child: Text('$_success', style: TextStyle(color: Colors.green), textAlign: TextAlign.center,),),
-                        _success == ' ' ? Container() : SizedBox(height: 15,),
+                        _msg.isEmpty ? Container() : Center(child: Text(_msg, style: TextStyle(color: Colors.green), textAlign: TextAlign.center,),),
+                        _msg.isEmpty ? Container() : SizedBox(height: 15,),
                         Text(
-                          'Verify your email using the verification link sent on your signup email id. This is required to access your account and helps save us from spam accounts. Log in again after you verify your email.',
+                          'Verifique seu email usando o link de verificação enviado para o email cadastrado. Isto é necessário para acessar sua conta e ajuda a evitar conta de spam. Faça login novamente depois de verificar seu email.',
                           style: TextStyle(fontSize: 18),
                           textAlign: TextAlign.justify,
                         ),
@@ -74,16 +76,22 @@ class _VerifyEmailState extends State<VerifyEmail> {
                           onTap:() async{
                             FirebaseUser user = Provider.of<FirebaseUser>(context, listen: false);
                             await user.sendEmailVerification().then((value) => setState(() {
-                              _success = 'Verification Email Sent';
+                              _sent = true;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Verificação de email enviada com sucess.')
+                                  )
+                              );
                             }));
                           },
                           child: Container(
                             padding: EdgeInsets.symmetric(horizontal: 35, vertical: 15),
                             decoration: BoxDecoration(
-                                color: Colors.cyan,
+                                color: Colors.blue[400],
                                 borderRadius: BorderRadius.all(Radius.circular(50))
                             ),
-                            child: Text('Re-Send Verfication Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),),
+                            child: Text(_sent ? 'Reenviar' : 'Enviar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),),
                           ),
                         ),
                       ],

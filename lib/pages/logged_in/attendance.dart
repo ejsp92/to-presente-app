@@ -1,5 +1,5 @@
-import 'package:attendanceapp/services/user.dart';
-import 'package:attendanceapp/services/user_database.dart';
+import 'package:attendanceapp/services/account.dart';
+import 'package:attendanceapp/services/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +65,7 @@ class _AddAttendanceState extends State<AddAttendance> {
                           label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
                           icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
                           onPressed: () async {
-                            dynamic result = await User().signOut();
+                            dynamic result = await Account().signOut();
                             if (result == null) {
                               Navigator.of(context).pushReplacementNamed('/authentication');
                             }
