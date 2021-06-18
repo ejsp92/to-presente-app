@@ -13,18 +13,35 @@ class AddStudents extends StatefulWidget {
 }
 
 class _AddStudentsState extends State<AddStudents> {
-  List<String> _filteredStudents, _enrolledStudents;
-  List<String> _allStudents = [];
-  String _message = ' ';
+  List<Map> _filteredStudents = [];
+  List<String> _enrolledStudents = [];
+  List<Map> _allStudents = [];
+  String _message = '';
   String _batch, _subject;
-  final StudentsList _allStudentsInstance = StudentsList();
+  String _search = '';
+  Student _studentDbInstance;
   TeacherSubjectsAndBatches _tSAB;
 
-  Future setup(FirebaseUser user) async{
-    _tSAB = TeacherSubjectsAndBatches(user);
-    _allStudents = await _allStudentsInstance.getAllStudents();
-    _allStudents = _allStudents.where((student) => !_enrolledStudents.contains(student)).toList();
-    _filteredStudents = _allStudents;
+  Future setup(FirebaseUser currentUser) async{
+    _studentDbInstance = Student(currentUser);
+    _tSAB = TeacherSubjectsAndBatches(currentUser);
+    _allStudents = await _studentDbInstance.getAllStudents();
+    if (_allStudents == null) _allStudents = [];
+
+    if (_allStudents.isNotEmpty) {
+      _allStudents =
+          _allStudents.where((student) => !_enrolledStudents.contains(
+              student['email'])).toList();
+
+      if (_search.isEmpty) {
+        _filteredStudents = _allStudents;
+      } else {
+        _filteredStudents = _allStudents.where((student) =>
+            '${student['firstName']} ${student['lastName']}'
+                .toLowerCase()
+                .contains(_search.toLowerCase())).toList();
+      }
+    }
   }
 
   @override
@@ -33,6 +50,7 @@ class _AddStudentsState extends State<AddStudents> {
     _enrolledStudents = data['enrolledStudents'];
     _batch = data['batch'];
     _subject = data['subject'];
+
     return EnhancedFutureBuilder(
       future: setup(Provider.of<FirebaseUser>(context)),
       rememberFutureResult: true,
@@ -52,7 +70,7 @@ class _AddStudentsState extends State<AddStudents> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [BoxShadow(
-                  color: Color.fromRGBO(51, 204, 255, 0.3),
+                  color: Color.fromRGBO(66, 165, 245, 0.3),
                   blurRadius: 10,
                   offset: Offset(0, 10),
                 )],
@@ -64,10 +82,11 @@ class _AddStudentsState extends State<AddStudents> {
                     BackButton(color: Colors.grey[700],),
                     Expanded(
                       child: TextFormField(
-                        decoration: authInputFormatting.copyWith(hintText: "Search Student By Email"),
+                        decoration: authInputFormatting.copyWith(hintText: "Buscar"),
                         onChanged: (val){
                           setState(() {
-                            _filteredStudents = _allStudents.where((student) => student.toLowerCase().contains(val.toLowerCase())).toList();
+                            _search = val;
+                            _filteredStudents = _allStudents.where((student) => '${student['firstName']} ${student['lastName']}'.toLowerCase().contains(_search.toLowerCase())).toList();
                           });
                         },
                       ),
@@ -88,24 +107,26 @@ class _AddStudentsState extends State<AddStudents> {
                         padding: EdgeInsets.all(6.5),
                         child: ListTile(
                           onTap: () async{
-                            String added = _filteredStudents[index];
-                            dynamic result = await _tSAB.addStudent(_subject, _batch, added);
+                            Map<String, dynamic> added = _filteredStudents[index];
+                            dynamic result = await _tSAB.addStudent(_subject, _batch, added['email']);
                             if(result == 'Success'){
                               setState(() {
-                                _enrolledStudents.add(added);
+                                _enrolledStudents.add(added['email']);
                                 _filteredStudents.remove(added);
-                                Navigator.pop(context, {'studentAdded' : added,});
+                                Navigator.pop(context, {'studentAdded' : added['email'],});
                               });
                             }
                             else{
-                              setState(() {
-                                _message = "Something Went Wrong Couldn't Add Student";
-                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Algo deu errado, não foi possível adicionar o(a) aluno(a).')
+                                  )
+                              );
                             }
                           },
                           title: Row(
                             children: <Widget>[
-                              Expanded(child: Text('${_filteredStudents[index]}', style: TextStyle(color: Colors.cyan),)),
+                              Expanded(child: Text('${_filteredStudents[index]['firstName']} ${_filteredStudents[index]['lastName']} (${_filteredStudents[index]['email']})', style: TextStyle(color: Colors.blue[400]),)),
                               Icon(Icons.add_circle_outline, color: Colors.blueGrey,)
                             ],
                           ),

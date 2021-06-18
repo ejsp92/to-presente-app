@@ -19,8 +19,8 @@ class _AddAttendanceState extends State<AddAttendance> {
   String _start = '';
   String _end = '';
   String _subject, _batch;
-  String _error = ' ';
-  List<String> _enrolledStudents = [];
+  String _errorMsg = '';
+  List<Map> _enrolledStudents = [];
   Map _attendance = {};
   TeacherSubjectsAndBatches _tSAB;
 
@@ -31,7 +31,7 @@ class _AddAttendanceState extends State<AddAttendance> {
     _subject = data['subject'];
     _batch = data['batch'];
     _enrolledStudents = data['enrolledStudents'];
-    _attendance = _attendance.isEmpty ? Map.fromIterable(_enrolledStudents, key: (student) => student, value: (student) => false ) : _attendance;
+    _attendance = _attendance.isEmpty ? Map.fromIterable(_enrolledStudents, key: (student) => student['email'], value: (student) => false ) : _attendance;
     _tSAB = TeacherSubjectsAndBatches(Provider.of<FirebaseUser>(context));
     return Scaffold(
       body: Column(
@@ -45,16 +45,12 @@ class _AddAttendanceState extends State<AddAttendance> {
                 Container(
                   padding: EdgeInsets.fromLTRB(5, 60, 30, 50),
                   decoration: BoxDecoration(
-                      color: Colors.cyan,
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(50),
-                          bottomRight: Radius.circular(50)
-                      )
+                      color: Colors.blue[400],
                   ),
                   child: Row(
                     children: <Widget>[
                       BackButton(color: Colors.white70,),
-                      Expanded(child: Text('${_chooseClass? 'Class Timing':'Add Attendance'}', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
+                      Expanded(child: Text('${_chooseClass? 'Horário da Aula' : 'Registrar Presenças'}', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -62,8 +58,8 @@ class _AddAttendanceState extends State<AddAttendance> {
                             borderRadius: BorderRadius.all(Radius.circular(50))
                         ),
                         child: FlatButton.icon(
-                          label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
-                          icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
+                          label: Text('Sair', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                          icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                           onPressed: () async {
                             dynamic result = await Account().signOut();
                             if (result == null) {
@@ -86,7 +82,7 @@ class _AddAttendanceState extends State<AddAttendance> {
   }
 
   Widget chooseClassDuration(){
-    dynamic fieldTextStyle = TextStyle(color: Colors.cyan, fontSize: 17, fontWeight: FontWeight.w400);
+    dynamic fieldTextStyle = TextStyle(color: Colors.blue[400], fontSize: 17, fontWeight: FontWeight.w400);
     return Column(
       children: <Widget>[
         Container(
@@ -94,7 +90,7 @@ class _AddAttendanceState extends State<AddAttendance> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [BoxShadow(
-              color: Color.fromRGBO(51, 204, 255, 0.3),
+              color: Color.fromRGBO(66, 165, 245, 0.3),
               blurRadius: 20,
               offset: Offset(0, 10),
             )],
@@ -111,7 +107,7 @@ class _AddAttendanceState extends State<AddAttendance> {
                   children: <Widget>[
                     Icon(Icons.calendar_today,),
                     SizedBox(width: 20,),
-                    Expanded(child: _date.isEmpty ? Text('Choose Class Date', style: fieldTextStyle,) : Text('$_date', style: fieldTextStyle)),
+                    Expanded(child: _date.isEmpty ? Text('Data da Aula', style: fieldTextStyle,) : Text('$_date', style: fieldTextStyle)),
                     IconButton(
                       icon: Icon(Icons.edit, color: Colors.grey[700],),
                       onPressed: (){
@@ -119,13 +115,13 @@ class _AddAttendanceState extends State<AddAttendance> {
                           context,
                           theme: DatePickerTheme(containerHeight: 350, backgroundColor: Colors.white,),
                           showTitleActions: true,
-                          minTime: DateTime(_current.year, _current.month - 1, _current.day),
+                          minTime: DateTime(_current.year, _current.month - 12, _current.day),
                           maxTime: DateTime(_current.year, _current.month, _current.day),
                           onConfirm: (dt) {
                             setState(() {
-                              _date =dt.toString().substring(0,10);
+                              _date = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
                             });
-                          },
+                          }, locale: LocaleType.pt,
                         );
                       },
                     )
@@ -138,7 +134,7 @@ class _AddAttendanceState extends State<AddAttendance> {
                   children: <Widget>[
                     Icon(Icons.access_time,),
                     SizedBox(width: 20,),
-                    Expanded(child: _start.isEmpty ? Text('Choose Start Time', style: fieldTextStyle,) : Text('$_start', style: fieldTextStyle,)),
+                    Expanded(child: _start.isEmpty ? Text('Início', style: fieldTextStyle,) : Text('$_start', style: fieldTextStyle,)),
                     IconButton(
                       icon: Icon(Icons.edit, color: Colors.grey[700],),
                       onPressed: (){
@@ -148,9 +144,9 @@ class _AddAttendanceState extends State<AddAttendance> {
                           showTitleActions: true,
                           onConfirm: (time) {
                             setState(() {
-                              _start = DateFormat.jm().format(time);
+                              _start = time.toString().substring(11,16);
                             });
-                          },
+                          }, locale: LocaleType.pt,
                         );
                       },
                     )
@@ -163,7 +159,7 @@ class _AddAttendanceState extends State<AddAttendance> {
                   children: <Widget>[
                     Icon(Icons.access_time,),
                     SizedBox(width: 20,),
-                    Expanded(child: _end.isEmpty ? Text('Choose Stop Time', style: fieldTextStyle,) : Text('$_end', style: fieldTextStyle,)),
+                    Expanded(child: _end.isEmpty ? Text('Fim', style: fieldTextStyle,) : Text('$_end', style: fieldTextStyle,)),
                     IconButton(
                       icon: Icon(Icons.edit, color: Colors.grey[700],),
                       onPressed: (){
@@ -173,9 +169,9 @@ class _AddAttendanceState extends State<AddAttendance> {
                           showTitleActions: true,
                           onConfirm: (time) {
                             setState(() {
-                              _end = DateFormat.jm().format(time);
+                              _end = time.toString().substring(11,16);
                             });
-                          },
+                          }, locale: LocaleType.pt,
                         );
                       },
                     )
@@ -185,32 +181,35 @@ class _AddAttendanceState extends State<AddAttendance> {
             ],
           ),
         ),
-        _error == ' ' ? Container() :  Text('$_error', style: TextStyle(color: Colors.red),),
-        _error == ' ' ? Container() :  SizedBox(height: 20,),
+        _errorMsg.isEmpty ? Container() :  Text(_errorMsg, style: TextStyle(color: Colors.red),),
+        _errorMsg.isEmpty ? Container() :  SizedBox(height: 20,),
         Container(
           height: 50,
-          margin: EdgeInsets.symmetric(horizontal: 70),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
-            color: Colors.cyan[300],
-          ),
-          child: Center(
-            child: FlatButton(
-              onPressed: (){
-                if(_date.isNotEmpty && _start.isNotEmpty && _start.isNotEmpty)
-                {
-                  setState(() {
-                    _chooseClass = false;
-                    _error = ' ';
-                  });
-                }
-                else{
-                  setState(() {
-                    _error = 'All three fields are required';
-                  });
-                }
-              },
-              child: Text('Submit',style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+          child: GestureDetector(
+            onTap: (){
+              if(_date.isNotEmpty && _start.isNotEmpty && _start.isNotEmpty)
+              {
+                setState(() {
+                  _chooseClass = false;
+                  _errorMsg = '';
+                });
+              }
+              else{
+                setState(() {
+                  _errorMsg = 'Todos os campos são obrigatórios.';
+                });
+              }
+            },
+            child: Container(
+              height: 50,
+              margin: EdgeInsets.symmetric(horizontal: 70),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: Colors.blue[400],
+              ),
+              child: Center(
+                child: Text('Prosseguir',style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+              ),
             ),
           ),
         ),
@@ -226,7 +225,7 @@ class _AddAttendanceState extends State<AddAttendance> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          _error == ' ' ? Container() :  Text('$_error', style: TextStyle(color: Colors.red),),
+          _errorMsg.isEmpty ? Container() :  Text('$_errorMsg', style: TextStyle(color: Colors.red),),
           Expanded(
             child: ListView.builder(
               itemCount: _enrolledStudents.length,
@@ -237,13 +236,13 @@ class _AddAttendanceState extends State<AddAttendance> {
                     child: Row(
                       children: <Widget>[
                         Expanded(
-                            child: Text('${_enrolledStudents[index]}', style: TextStyle(color: _attendance[_enrolledStudents[index]] ? Colors.green : Colors.red),),
+                            child: Text('${_enrolledStudents[index]['firstName']} ${_enrolledStudents[index]['lastName']}', style: TextStyle(color: _attendance[_enrolledStudents[index]['email']] ? Colors.green : Colors.red),),
                         ),
                         IconButton(
-                          icon: _attendance[_enrolledStudents[index]] ? Icon(Icons.check_circle_outline, color: Colors.green,) : Icon(Icons.check_circle_outline, color: Colors.red,),
+                          icon: _attendance[_enrolledStudents[index]['email']] ? Icon(Icons.check_circle_outline, color: Colors.green,) : Icon(Icons.check_circle_outline, color: Colors.red,),
                           onPressed: () {
                             setState(() {
-                              _attendance[_enrolledStudents[index]] = !_attendance[_enrolledStudents[index]];
+                              _attendance[_enrolledStudents[index]['email']] = !_attendance[_enrolledStudents[index]['email']];
                             });
                           },
                         ),
@@ -256,26 +255,38 @@ class _AddAttendanceState extends State<AddAttendance> {
           ),
           Container(
             height: 50,
-            margin: EdgeInsets.symmetric(horizontal: 40),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(50),
-              color: Colors.cyan[300],
-            ),
+            margin: EdgeInsets.symmetric(vertical: 20),
             child: Center(
-              child: FlatButton(
-                onPressed: () async{
-                  String dateTime = _date + ' : ' + _start + ' - ' + _end;
+              child: GestureDetector(
+                onTap: () async{
+                  String dateTime = '$_date $_start - $_end';
                   dynamic result = await _tSAB.addAttendance(_subject, _batch, dateTime, _attendance);
                   if(result == null){
-                    setState(() {
-                      _error = 'Something went wrong try again';
-                    });
-                  }
-                  else{
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Algo deu errado, tente novamente.')
+                        )
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Presenças registradas com sucesso.')
+                        )
+                    );
                     Navigator.pop(context);
                   }
                 },
-                child: Text('Add Attendance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+                child: Container(
+                  height: 50,
+                  margin: EdgeInsets.symmetric(horizontal: 70),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    color: Colors.blue[400],
+                  ),
+                  child: Center(
+                    child:  Text('Registrar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 17),),
+                  ),
+                ),
               )
             ),
           ),

@@ -12,26 +12,53 @@ class EnrolledStudents extends StatefulWidget {
 }
 
 class _EnrolledStudentsState extends State<EnrolledStudents> {
+  Student _studentDbInstance;
   TeacherSubjectsAndBatches _tSAB;
+  List<Map> _allStudents = [];
+  List<Map> _enrolledStudents = [];
   Map _studentsMap = {};
-  List<String> _students = [];
-  List<String> _studentsVisible = [];
+  List<String> _studentIds = [];
+  List<Map> _studentsVisible = [];
   String _subject = '';
   String _batch = '';
-  String _error = '';
+  String _search = '';
+  String _errorMsg = '';
   String _userName = '';
+  String _userEmail = '';
   bool _removeStudents = false;
   final GlobalKey<ScaffoldState> _scaffoldKey= GlobalKey();
 
-  Future setup(FirebaseUser user, String sub, String batchCopy) async {
-    _tSAB = TeacherSubjectsAndBatches(user);
+  Future setup(FirebaseUser currentUser, String sub, String batchCopy) async {
+    _tSAB = TeacherSubjectsAndBatches(currentUser);
+    _studentDbInstance = Student(currentUser);
+
+    _allStudents = await _studentDbInstance.getAllStudents();
+    if (_allStudents == null) _allStudents = [];
+
     _studentsMap = await _tSAB.getStudents(sub, batchCopy);
     if (_studentsMap == null) {
-      _students = ['Couldn\'t get students, try again'];
+      _studentIds = [];
+      _enrolledStudents = [];
+      _studentsVisible = [];
+    } else {
+      _studentIds = _studentsMap.keys.where((key) => key != 'Empty').toList();
+      _enrolledStudents = _allStudents.where((student) => _studentIds.contains(student['email'])).toList();
+
+      if (_search.isNotEmpty) {
+        _studentsVisible = _enrolledStudents.where((student) => '${student['firstName']} ${student['lastName']}'.toLowerCase().contains(_search.toLowerCase())).toList();
+      } else {
+        _studentsVisible = _enrolledStudents;
+      }
     }
-    else{
-      _students = _studentsMap.keys.where((key) => key != 'Empty').toList();
-      _studentsVisible = _students;
+
+    _userName = await User(currentUser).userName();
+    if(_userName == null){
+      _userName = 'N/D';
+    }
+
+    if (currentUser != null) _userEmail = currentUser.email;
+    if (_userEmail == null) {
+      _userEmail = 'N/D';
     }
   }
 
@@ -51,13 +78,13 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                   Expanded(
                     child: Container(
                       padding: EdgeInsets.fromLTRB(18, 95, 0, 20),
-                      color: Colors.cyan,
+                      color: Colors.blue[400],
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(_userName, style: TextStyle(color: Colors.white, fontSize: 20),),
                           SizedBox(height: 10,),
-                          Text(Provider.of<FirebaseUser>(context).email, style: TextStyle(color: Colors.white, fontSize: 12),),
+                          Text(_userEmail, style: TextStyle(color: Colors.white, fontSize: 12),),
                         ],
                       ),
                     ),
@@ -68,24 +95,39 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                 child: ListView(
                   children: <Widget>[
                     ListTile(
-                      title: Text('Add Student'),
+                      title: Text('Adicionar Estudante'),
                       onTap: () async{
                         Navigator.of(context).pop();
-                        dynamic returnedData = await Navigator.pushNamed(context, '/addStudents', arguments: {'enrolledStudents' : _students, 'batch' : _batch, 'subject': _subject});
+                        dynamic returnedData = await Navigator.pushNamed(context, '/addStudents', arguments: {'enrolledStudents' : _studentIds, 'batch' : _batch, 'subject': _subject});
                         if(returnedData != null) {
                           if(_studentsMap['Empty']){
                             _studentsMap['Empty'] = false;
                           }
                           setState(() {
-                            _studentsMap['${returnedData['studentAdded']}'] = false;
-                            _students.add(returnedData['studentAdded']);
-                            _studentsVisible.add(returnedData['studentAdded']);
+                            if (!_studentIds.contains(returnedData['studentAdded'])) {
+                              _studentsMap['${returnedData['studentAdded']}'] = false;
+                              _studentIds.add(returnedData['studentAdded']);
+                              _enrolledStudents = _allStudents.where((student) =>
+                                  _studentIds.contains(student['email']))
+                                  .toList();
+
+                              if (_search.isNotEmpty) {
+                                _studentsVisible =
+                                    _enrolledStudents.where((student) =>
+                                        '${student['firstName']} ${student['lastName']}'
+                                            .toLowerCase()
+                                            .contains(_search.toLowerCase()))
+                                        .toList();
+                              } else {
+                                _studentsVisible = _enrolledStudents;
+                              }
+                            }
                           });
                         }
                       },
                     ),
                     ListTile(
-                      title: Text('Remove Student'),
+                      title: Text('Remover Estudante'),
                       onTap: (){
                         Navigator.of(context).pop();
                         setState(() {
@@ -94,14 +136,14 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                       },
                     ),
                     ListTile(
-                      title: Text('Add Attendance'),
+                      title: Text('Registrar Presenças'),
                       onTap: () async{
                         Navigator.of(context).pop();
-                        await Navigator.pushNamed(context, '/addAttendance', arguments: {'enrolledStudents' : _students, 'subject' : _subject, 'batch' : _batch});
+                        await Navigator.pushNamed(context, '/addAttendance', arguments: {'enrolledStudents' : _enrolledStudents, 'subject' : _subject, 'batch' : _batch});
                       },
                     ),
                     ListTile(
-                      title: Text('Account Settings'),
+                      title: Text('Configurações de Conta'),
                       onTap: (){
                         Navigator.of(context).pop();
                         Navigator.of(context).pushNamed('/accountSettings');
@@ -122,16 +164,12 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                 Container(
                   padding: EdgeInsets.fromLTRB(5, 60, 30, 50),
                   decoration: BoxDecoration(
-                      color: Colors.cyan,
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(50),
-                          bottomRight: Radius.circular(50)
-                      )
+                      color: Colors.blue[400]
                   ),
                   child: Row(
                     children: <Widget>[
                       BackButton(color: Colors.white70,),
-                      Expanded(child: Text('Students', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
+                      Expanded(child: Text('Estudantes ($_batch)', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -139,8 +177,8 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                             borderRadius: BorderRadius.all(Radius.circular(50))
                         ),
                         child: FlatButton.icon(
-                          label: Text('Log Out', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
-                          icon: Icon(Icons.exit_to_app, color: Colors.cyan, size: 15,),
+                          label: Text('Sair', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                          icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                           onPressed: () async {
                             dynamic result = await Account().signOut();
                             if (result == null) {
@@ -158,7 +196,7 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [BoxShadow(
-                      color: Color.fromRGBO(51, 204, 255, 0.3),
+                      color: Color.fromRGBO(66, 165, 245, 0.3),
                       blurRadius: 10,
                       offset: Offset(0, 10),
                     )],
@@ -169,17 +207,28 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                         child: Container(
                           padding: EdgeInsets.all(6.5),
                           child: TextFormField(
-                            decoration: authInputFormatting.copyWith(hintText: "Search By ID"),
+                            decoration: authInputFormatting.copyWith(hintText: "Buscar"),
                             onChanged: (val){
                               setState(() {
-                                _studentsVisible = _students.where((student) => student.toLowerCase().startsWith(val.toLowerCase())).toList();
+                                _search = val;
+
+                                if (_search.isNotEmpty) {
+                                  _studentsVisible =
+                                      _enrolledStudents.where((student) =>
+                                          '${student['firstName']} ${student['lastName']}'
+                                              .toLowerCase()
+                                              .contains(_search.toLowerCase()))
+                                          .toList();
+                                } else {
+                                  _studentsVisible = _enrolledStudents;
+                                }
                               });
                             },
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.menu, color: Colors.cyan),
+                        icon: Icon(Icons.menu, color: Colors.blue[400]),
                         onPressed: (){
                           _scaffoldKey.currentState.openEndDrawer();
                         },
@@ -216,7 +265,7 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
           _studentsMap['Empty'] ? addStudentButton() : Container(),
           _removeStudents && !_studentsMap['Empty'] ? removeStudent() : Container(),
           _studentsMap['Empty'] ? SizedBox(height: 15,) : Container(),
-          _studentsMap['Empty'] ? Expanded(child: Text('You Need To Add Students', style: TextStyle(color: Colors.red),),) : Expanded(
+          _studentsMap['Empty'] ? Expanded(child: Text('Nenhum estudante encontrado nesta turma.', style: TextStyle(color: Colors.red),),) : Expanded(
             child: ListView.builder(
               itemCount: _studentsVisible.length,
               itemBuilder: (context, index){
@@ -240,13 +289,13 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                                      mainAxisSize: MainAxisSize.min,
                                      children: <Widget>[
                                        SizedBox(height: 30,),
-                                       Text('Are you sure you want to remove ${_studentsVisible[index]} ? This action can\'t be reverted.', textAlign: TextAlign.justify,),
+                                       Text('Você realmente deseja remover ${_studentsVisible[index]['firstName']} ${_studentsVisible[index]['lastName']} ? Está ação não pode ser revertida.', textAlign: TextAlign.justify,),
                                        SizedBox(height: 20,),
                                        Row(
                                          children: <Widget>[
                                            Expanded(
                                              child: FlatButton(
-                                               child: Text('Cancel', style: TextStyle(color: Colors.cyan),),
+                                               child: Text('Cancelar', style: TextStyle(color: Colors.blue[400]),),
                                                onPressed: (){
                                                  Navigator.of(context).pop();
                                                },
@@ -254,20 +303,20 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                                            ),
                                            Expanded(
                                              child: FlatButton(
-                                               child: Text('Delete', style: TextStyle(color: Colors.cyan),),
+                                               child: Text('Remover', style: TextStyle(color: Colors.blue[400]),),
                                                onPressed: () async{
-                                                 dynamic result = await _tSAB.deleteStudent(_subject, _batch, _studentsVisible[index]);
-                                                 String deleted = _studentsVisible[index];
+                                                 dynamic result = await _tSAB.deleteStudent(_subject, _batch, _studentsVisible[index]['email']);
+                                                 Map deleted = _studentsVisible[index];
                                                  if(result == 'Success')
                                                  {
                                                    Navigator.of(context).pop();
                                                    setState(() {
-                                                     _error = '';
-                                                     _studentsVisible.remove(deleted);
-                                                     _students.remove(deleted);
-                                                     _studentsMap.removeWhere((key, value) => key == deleted);
+                                                     _errorMsg = '';
+                                                     _studentsVisible.removeAt(index);
+                                                     _studentIds.remove(deleted['email']);
+                                                     _studentsMap.removeWhere((key, value) => key == deleted['email']);
                                                    });
-                                                   if(_students.isEmpty){
+                                                   if(_studentIds.isEmpty){
                                                      setState(() {
                                                        _removeStudents = false;
                                                        _studentsMap['Empty'] = true;
@@ -275,9 +324,12 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                                                    }
                                                  }
                                                  else{
-                                                   setState(() {
-                                                     _error = "Couldn't delete ${_studentsVisible[index]}";
-                                                   });
+                                                   ScaffoldMessenger.of(context).showSnackBar(
+                                                       SnackBar(
+                                                           content: Text('Não foi possível remover ${_studentsVisible[index]['firstName']} ${_studentsVisible[index]['lastName']}.')
+                                                       )
+                                                   );
+
                                                    Navigator.of(context).pop();
                                                  }
                                                },
@@ -293,47 +345,17 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
                          );
                        }
                        else{
-                         if(_studentsMap[_studentsVisible[index]]){
-                           Navigator.pushNamed(context, '/attendanceList', arguments: {
-                             'teacherEmail' : Provider.of<FirebaseUser>(context, listen: false).email ,
-                             'subject': _subject,
-                             'batch' : _batch,
-                             'studentEmail' : _studentsVisible[index],
-                           });
-                         }
-                         else{
-                           showDialog(
-                               context: context,
-                               builder: (context){
-                             return Dialog(
-                               shape:  RoundedRectangleBorder(
-                                   borderRadius: BorderRadius.circular(20.0)
-                               ),
-                               child: Container(
-                                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                                 child: Column(
-                                   mainAxisSize: MainAxisSize.min,
-                                   children: <Widget>[
-                                     SizedBox(height: 30,),
-                                     Text('This enrollement has not been accepted by the student.', textAlign: TextAlign.justify,),
-                                     SizedBox(height: 20,),
-                                     FlatButton(
-                                       child: Text('Close', style: TextStyle(color: Colors.cyan),),
-                                       onPressed: (){
-                                         Navigator.of(context).pop();
-                                       },
-                                     )
-                                   ],
-                                 ),
-                               ),
-                             );
-                           });
-                         }
+                         Navigator.pushNamed(context, '/attendanceList', arguments: {
+                           'subject': _subject,
+                           'batch' : _batch,
+                           'studentEmail' : _studentsVisible[index]['email'],
+                           'studentName' : '${_studentsVisible[index]['firstName']} ${_studentsVisible[index]['lastName']}',
+                         });
                        }
                       },
                       title: Row(
                         children: <Widget>[
-                          Expanded(child: Text('${_studentsVisible[index]}', style: TextStyle(color: Colors.cyan),)),
+                          Expanded(child: Text('${_studentsVisible[index]['firstName']} ${_studentsVisible[index]['lastName']} (${_studentsVisible[index]['email']})', style: TextStyle(color: Colors.blue[400]),)),
                           _removeStudents ? Icon(Icons.delete, color: Colors.grey[700],) : Icon(Icons.forward, color: Colors.grey[700],),
                         ],
                       ),
@@ -352,7 +374,7 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
 
     return GestureDetector(
       onTap:() async{
-        dynamic data = await Navigator.pushNamed(context, '/addStudents', arguments: {'enrolledStudents' : _students, 'batch' : _batch, 'subject': _subject});
+        dynamic data = await Navigator.pushNamed(context, '/addStudents', arguments: {'enrolledStudents' : _studentIds, 'batch' : _batch, 'subject': _subject});
         print(data);
         if(data != null) {
           if(_studentsMap['Empty']){
@@ -360,15 +382,28 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
           }
           setState(() {
             _studentsMap['${data['studentAdded']}'] = false;
-            _students.add(data['studentAdded']);
-            _studentsVisible.add(data['studentAdded']);
+            _studentIds.add(data['studentAdded']);
+            _enrolledStudents = _allStudents.where((student) =>
+                _studentIds.contains(student['email']))
+                .toList();
+
+            if (_search.isNotEmpty) {
+              _studentsVisible =
+                  _enrolledStudents.where((student) =>
+                      '${student['firstName']} ${student['lastName']}'
+                          .toLowerCase()
+                          .contains(_search.toLowerCase()))
+                      .toList();
+            } else {
+              _studentsVisible = _enrolledStudents;
+            }
           });
         }
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         decoration: BoxDecoration(
-            color: Colors.cyan,
+            color: Colors.blue[400],
             borderRadius: BorderRadius.all(Radius.circular(50))
         ),
         child: Row(
@@ -376,7 +411,7 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
           children: <Widget>[
             Icon(Icons.add, color: Colors.white, size: 20,),
             SizedBox(width: 5,) ,
-            Text('Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),),
+            Text('Adicionar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),),
           ],
         ),
       ),
@@ -386,22 +421,22 @@ class _EnrolledStudentsState extends State<EnrolledStudents> {
   Widget removeStudent(){
     return Column(
       children: <Widget>[
-        _error == '' ? Container() : Center(child: Text('$_error', style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
-        _error == '' ? Container() : SizedBox(height: 15,),
+        _errorMsg.isEmpty ? Container() : Center(child: Text(_errorMsg, style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
+        _errorMsg.isEmpty ? Container() : SizedBox(height: 15,),
         GestureDetector(
           onTap:() {
             setState(() {
               _removeStudents = !_removeStudents;
-              _error = '';
+              _errorMsg = '';
             });
           },
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             decoration: BoxDecoration(
-                color: Colors.cyan,
+                color: Colors.blue[400],
                 borderRadius: BorderRadius.all(Radius.circular(50))
             ),
-            child: Center(child: Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)),
+            child: Center(child: Text('Concluir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)),
           ),
         ),
       ],

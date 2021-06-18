@@ -1,8 +1,8 @@
 import 'package:attendanceapp/pages/logged_in/home.dart';
 import 'package:attendanceapp/pages/logged_in/add_students.dart';
-import 'package:attendanceapp/pages/logged_in/attendance.dart';
+import 'package:attendanceapp/pages/logged_in/add_attendance.dart';
 import 'package:attendanceapp/pages/logged_in/batches.dart';
-import 'package:attendanceapp/pages/logged_in/students.dart';
+import 'package:attendanceapp/pages/logged_in/enrolled_students.dart';
 import 'package:attendanceapp/pages/logged_in/account_settings.dart';
 import 'package:attendanceapp/pages/logged_in/attendance_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,7 +27,7 @@ class LoginApp extends StatelessWidget {
       value: Account().account,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Attendance App ',
+        title: 'Tô Presente',
         home: Authentication(),
         routes: {
           '/batches' : (context) => Batches(),

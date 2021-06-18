@@ -15,30 +15,44 @@ class _BatchesState extends State<Batches> {
   TeacherSubjectsAndBatches _tSAB;
   FirebaseUser _user;
   String _subject = '';
-  String _error  = '';
+  String _errorMsg = '';
   String _userName = '';
-  String _batch = '';
+  String _userEmail = '';
+  String _search = '';
   List<String> _batches = [];
   List<String> _batchesVisible = [];
   final _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   bool _delete = false;
 
-  Future setup(FirebaseUser userCurrent, String sub) async{
-    _user = userCurrent;
+  Future setup(FirebaseUser currentUser, String sub) async {
+    _user = currentUser;
+
     _tSAB = TeacherSubjectsAndBatches(_user);
     _batches = await _tSAB.getBatches(sub);
-    if(_batches == null){
-      _batches = ["Couldn't get batches, try again"];
+    if (_batches == null) _batches = ['Empty'];
+
+    if (_search.isEmpty)
+      _batchesVisible = _batches;
+    else
+      _batchesVisible = _batches.where((batch) =>
+          batch.toLowerCase().startsWith(_search.toLowerCase())).toList();
+
+    _userName = await User(_user).userName();
+    if (_userName == null) {
+      _userName = 'N/D';
     }
-    _batchesVisible = _batches;
+
+    if (_user != null) _userEmail = _user.email;
+    if (_userEmail == null) {
+      _userEmail = 'N/D';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     Map data = ModalRoute.of(context).settings.arguments;
     _subject = data['subject'];
-    _userName = data['userName'];
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: Drawer(
@@ -55,7 +69,7 @@ class _BatchesState extends State<Batches> {
                       children: <Widget>[
                         Text(_userName, style: TextStyle(color: Colors.white, fontSize: 20),),
                         SizedBox(height: 10,),
-                        Text(Provider.of<FirebaseUser>(context).email, style: TextStyle(color: Colors.white, fontSize: 12),),
+                        Text(_userEmail, style: TextStyle(color: Colors.white, fontSize: 12),),
                       ],
                     ),
                   ),
@@ -66,7 +80,7 @@ class _BatchesState extends State<Batches> {
               child: ListView(
                 children: <Widget>[
                   ListTile(
-                    title: Text('Add Batch'),
+                    title: Text('Adicionar Turma'),
                     onTap: () async{
                       Navigator.of(context).pop();
                       addBatchForm().then((onValue){
@@ -75,7 +89,7 @@ class _BatchesState extends State<Batches> {
                     },
                   ),
                   ListTile(
-                    title: Text('Remove Batch'),
+                    title: Text('Remover Turma'),
                     onTap: (){
                       Navigator.of(context).pop();
                       if(_batches[0] != 'Empty'){
@@ -86,7 +100,7 @@ class _BatchesState extends State<Batches> {
                     },
                   ),
                   ListTile(
-                    title: Text('Account Settings'),
+                    title: Text('Configurações de Conta'),
                     onTap: (){
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamed('/accountSettings');
@@ -112,7 +126,7 @@ class _BatchesState extends State<Batches> {
                   child: Row(
                     children: <Widget>[
                       BackButton(color: Colors.white70,),
-                      Expanded(child: Text('Batches', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
+                      Expanded(child: Text('Turmas ($_subject)', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -120,7 +134,7 @@ class _BatchesState extends State<Batches> {
                             borderRadius: BorderRadius.all(Radius.circular(50))
                         ),
                         child: FlatButton.icon(
-                          label: Text('Log Out', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
+                          label: Text('Sair', style: TextStyle(color: Colors.blue[400], fontWeight: FontWeight.bold)),
                           icon: Icon(Icons.exit_to_app, color: Colors.blue[400], size: 15,),
                           onPressed: () async {
                             dynamic result = await Account().signOut();
@@ -139,7 +153,7 @@ class _BatchesState extends State<Batches> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [BoxShadow(
-                      color: Color.fromRGBO(51, 204, 255, 0.3),
+                      color: Color.fromRGBO(66, 165, 245, 0.3),
                       blurRadius: 10,
                       offset: Offset(0, 10),
                     )],
@@ -150,10 +164,11 @@ class _BatchesState extends State<Batches> {
                         child: Container(
                           padding: EdgeInsets.all(6.5),
                           child: TextFormField(
-                            decoration: authInputFormatting.copyWith(hintText: "Search By Batch"),
+                            decoration: authInputFormatting.copyWith(hintText: "Buscar"),
                             onChanged: (val){
                               setState(() {
-                                _batchesVisible = _batches.where((batch) => batch.toLowerCase().startsWith(val.toLowerCase())).toList();
+                                _search = val;
+                                _batchesVisible = _batches.where((batch) => batch.toLowerCase().startsWith(_search.toLowerCase())).toList();
                               });
                             },
                           ),
@@ -196,7 +211,7 @@ class _BatchesState extends State<Batches> {
         children: <Widget>[
           _batches[0] == "Empty" ? addBatchButton() : Container(),
           _delete && _batches[0] != 'Empty' ? deleteButton() : Container(),
-          _batches[0] == 'Empty' ? Text('\n\nYou Need To Add Batches', style: TextStyle(color: Colors.red),) : Expanded(
+          _batches[0] == 'Empty' ? Text('\n\nNenhuma turma encontrada.', style: TextStyle(color: Colors.red),) : Expanded(
             child: ListView.builder(
               itemCount: _batchesVisible.length,
               itemBuilder: (context, index){
@@ -223,13 +238,13 @@ class _BatchesState extends State<Batches> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: <Widget>[
                                         SizedBox(height: 30,),
-                                        Text('Are you sure you want to delete ${_batchesVisible[index]} ? This action can\'t be reverted.', textAlign: TextAlign.justify,),
+                                        Text('Você realmente deseja deletar a turma ${_batchesVisible[index]} ? Está ação não pode ser revertida.', textAlign: TextAlign.justify,),
                                         SizedBox(height: 20,),
                                         Row(
                                           children: <Widget>[
                                             Expanded(
                                               child: FlatButton(
-                                                child: Text('Cancel', style: TextStyle(color: Colors.blue[400]),),
+                                                child: Text('Cancelar', style: TextStyle(color: Colors.blue[400]),),
                                                 onPressed: (){
                                                   Navigator.of(context).pop();
                                                 },
@@ -237,7 +252,7 @@ class _BatchesState extends State<Batches> {
                                             ),
                                             Expanded(
                                               child: FlatButton(
-                                                child: Text('Delete', style: TextStyle(color: Colors.blue[400]),),
+                                                child: Text('Deletar', style: TextStyle(color: Colors.blue[400]),),
                                                 onPressed: () async{
                                                   dynamic result = await _tSAB.deleteBatch(_subject, _batchesVisible[index]);
                                                   String deleted = _batchesVisible[index];
@@ -245,7 +260,7 @@ class _BatchesState extends State<Batches> {
                                                   {
                                                     Navigator.of(context).pop();
                                                     setState(() {
-                                                      _error = '';
+                                                      _errorMsg = '';
                                                       _batchesVisible.remove(deleted);
                                                       _batches.remove(deleted);
                                                     });
@@ -257,9 +272,11 @@ class _BatchesState extends State<Batches> {
                                                     }
                                                   }
                                                   else{
-                                                    setState(() {
-                                                      _error = "Couldn't delete ${_batchesVisible[index]}";
-                                                    });
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                            content: Text("Não foi possível deletar a turma ${_batchesVisible[index]}")
+                                                        )
+                                                    );
                                                     Navigator.of(context).pop();
                                                   }
                                                 },
@@ -277,7 +294,7 @@ class _BatchesState extends State<Batches> {
                       },
                       title: Row(
                         children: <Widget>[
-                          Expanded(child: Text('${_batchesVisible[index]}', style: TextStyle(color: Colors.blue[400]),)),
+                          Expanded(child: Text(_batchesVisible[index], style: TextStyle(color: Colors.blue[400]),)),
                           _delete ? Icon(Icons.delete, color: Colors.grey[700],) : Icon(Icons.forward, color: Colors.grey[700],),
                         ],
                       ),
@@ -311,7 +328,7 @@ class _BatchesState extends State<Batches> {
           children: <Widget>[
             Icon(Icons.add, color: Colors.white, size: 25,),
             SizedBox(width: 10,) ,
-            Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
+            Text('Adicionar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
           ],
         ),
       ),
@@ -321,15 +338,14 @@ class _BatchesState extends State<Batches> {
   Widget deleteButton() {
     return Column(
       children: <Widget>[
-        _error == ' ' ? Container() : Center(child: Text('$_error', style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
-        _error == ' ' ? Container() : SizedBox(height: 15,),
+        _errorMsg.isEmpty ? Container() : Center(child: Text(_errorMsg, style: TextStyle(color: Colors.red), textAlign: TextAlign.center,),),
+        _errorMsg.isEmpty ? Container() : SizedBox(height: 15,),
         GestureDetector(
           onTap:(){
             setState(() {
               _delete = false;
-              _error = ' ';
-            }
-            );
+              _errorMsg = '';
+            });
           },
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -342,7 +358,7 @@ class _BatchesState extends State<Batches> {
               children: <Widget>[
                 Icon(Icons.add, color: Colors.white, size: 25,),
                 SizedBox(width: 10,) ,
-                Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
+                Text('Concluir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),)
               ],
             ),
           ),
@@ -351,8 +367,9 @@ class _BatchesState extends State<Batches> {
     );
   }
 
-  Future addBatchForm()
-  {
+  Future addBatchForm() {
+    TextEditingController batchController = TextEditingController();
+    String batch = '';
     bool adding = false;
     return showDialog(
       context: context,
@@ -371,27 +388,28 @@ class _BatchesState extends State<Batches> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          _error == ' ' ? Container() : Center(child: Text('$_error', style: TextStyle(color: Colors.red),)),
-                          _error == ' ' ? Container() : SizedBox(height: 15,),
+                          _errorMsg.isEmpty ? Container() : Center(child: Text('$_errorMsg', style: TextStyle(color: Colors.red),)),
+                          _errorMsg.isEmpty ? Container() : SizedBox(height: 15,),
                           Container(
                             padding: EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.all(Radius.circular(20)),
                               boxShadow: [BoxShadow(
-                                color: Color.fromRGBO(51, 204, 255, 0.3),
+                                color: Color.fromRGBO(66, 165, 245, 0.3),
                                 blurRadius: 10,
                                 offset: Offset(0, 10),
                               )],
                             ),
                             child: TextFormField(
-                              decoration: authInputFormatting.copyWith(hintText: 'Add Batch Name'),
-                              validator: (val) => val.isEmpty ? 'Batch Name Can\'t Be Empty' : null,
-                              onChanged: (val) => _batch = val,
+                              controller: batchController,
+                              decoration: authInputFormatting.copyWith(hintText: 'Nome da turma'),
+                              validator: (val) => val.isEmpty ? 'Nome da turma não pode ficar em branco' : null,
+                              onChanged: (val) => batch = val,
                             ),
                           ),
                           SizedBox(height: 15,),
-                          adding ? Center(child: Text("Adding ..."),) : Row(
+                          adding ? Center(child: Text("Adicionando..."),) : Row(
                             children: <Widget>[
                               Expanded(
                                 child: GestureDetector(
@@ -401,7 +419,7 @@ class _BatchesState extends State<Batches> {
                                       color: Colors.blue[400],
                                       borderRadius: BorderRadius.all(Radius.circular(20)),
                                     ),
-                                    child: Center(child: Text("Add", style: TextStyle(color: Colors.white),)),
+                                    child: Center(child: Text("Adicionar", style: TextStyle(color: Colors.white),)),
                                   ),
                                   onTap: () async{
                                     if(_formKey.currentState.validate())
@@ -409,37 +427,51 @@ class _BatchesState extends State<Batches> {
                                       setState(() {
                                         adding = true;
                                       });
-                                      if(_batches.contains(_batch))
+                                      if(_batches.contains(batch))
                                       {
                                         setState(() {
-                                          _error = "Batch Already Present";
                                           adding = false;
                                         });
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                                content: Text('Turma já existe.')
+                                            )
+                                        );
                                       }
                                       else
                                       {
-                                        dynamic result = await _tSAB.addBatch(_subject, _batch);
+                                        dynamic result = await _tSAB.addBatch(_subject, batch);
                                         if(result ==  null)
                                         {
                                           setState(() {
-                                            _error = "Something Went Wrong, Couldn't Add Batch";
                                             adding = false;
                                           });
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                  content: Text('Algo deu errado, não foi possível adicionar a turma.')
+                                              )
+                                          );
                                         }
                                         else
                                         {
                                           if(_batches[0] == 'Empty'){
                                             setState((){
                                               _batches.clear();
-                                              _batches.add(_batch);
-                                              _error = ' ';
+                                              _batches.add(batch);
+                                              _errorMsg = '';
+                                              batch = '';
+                                              batchController.clear();
                                               adding = false;
                                             });
                                           }
                                           else{
                                             setState((){
-                                              _batches.add(_batch);
-                                              _error = ' ';
+                                              _batches.add(batch);
+                                              _errorMsg = '';
+                                              batch = '';
+                                              batchController.clear();
                                               adding = false;
                                             });
                                           }
@@ -458,11 +490,13 @@ class _BatchesState extends State<Batches> {
                                       color: Colors.blue[400],
                                       borderRadius: BorderRadius.all(Radius.circular(20)),
                                     ),
-                                    child: Center(child: Text("Done", style: TextStyle(color: Colors.white),)),
+                                    child: Center(child: Text("Concluir", style: TextStyle(color: Colors.white),)),
                                   ),
                                   onTap: () {
                                     setState(() {
-                                      _error = ' ';
+                                      _errorMsg = '';
+                                      batch = '';
+                                      batchController.clear();
                                     });
                                     Navigator.of(context).pop();
                                   },

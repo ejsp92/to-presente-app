@@ -3,7 +3,6 @@ import 'package:attendanceapp/services/database.dart';
 import 'package:attendanceapp/pages/components/formatting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:provider/provider.dart';
 
 class AccountSettings extends StatefulWidget {
@@ -31,17 +30,13 @@ class _AccountSettingsState extends State<AccountSettings> {
                   Container(
                     padding: EdgeInsets.fromLTRB(5, 60, 30, 50),
                     decoration: BoxDecoration(
-                        color: Colors.cyan,
-                        borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(50),
-                            bottomRight: Radius.circular(50)
-                        )
+                        color: Colors.blue[400]
                     ),
                     child: Row(
                       children: <Widget>[
                         BackButton(color: Colors.white70,),
                         Expanded(child: Text(
-                          'Account Settings', style: TextStyle(color: Colors
+                          'Configurações de Conta', style: TextStyle(color: Colors
                             .white, fontSize: 25, fontWeight: FontWeight
                             .bold),)),
                         Container(
@@ -52,10 +47,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                                   50))
                           ),
                           child: FlatButton.icon(
-                            label: Text('Log Out', style: TextStyle(
-                                color: Colors.cyan,
+                            label: Text('Sair', style: TextStyle(
+                                color: Colors.blue[400],
                                 fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.exit_to_app, color: Colors.cyan,
+                            icon: Icon(Icons.exit_to_app, color: Colors.blue[400],
                               size: 15,),
                             onPressed: () async {
                               dynamic result = await Account().signOut();
@@ -81,14 +76,14 @@ class _AccountSettingsState extends State<AccountSettings> {
                     SizedBox(height: 40,),
                     Card(
                       child: ListTile(
-                        title: Text("Update Name"),
+                        title: Text("Atualizar nome"),
                         trailing: Icon(Icons.edit),
                         subtitle: _status['index'] == 0 ? Text(
                           _status['status'],
                           style: TextStyle(color: _status['error']
                               ? Colors.red
                               : Colors.green),) : Text(
-                            "Update Your Display Name"),
+                            "Atualize seu nome de exibição"),
                         onTap: () {
                           setState(() {
                             _status = {
@@ -104,27 +99,33 @@ class _AccountSettingsState extends State<AccountSettings> {
                     _status['action'] == 0 ? changeNameForm() : Container(),
                     Card(
                       child: ListTile(
-                        title: Text("Update Email"),
+                        title: Text("Atualizar email"),
                         trailing: Icon(Icons.email),
                         subtitle: _status['index'] == 1 ? Text(
                           _status['status'],
                           style: TextStyle(color: _status['error']
                               ? Colors.red
                               : Colors.green),) : Text(
-                            "Update Your Current Email"),
-                        onTap: () {},
+                            "Atualize seu email atual"),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Função indisponível.')
+                              )
+                          );
+                        },
                       ),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0)),
                     ),
                     Card(
                       child: ListTile(
-                        title: Text("Update Password"),
+                        title: Text("Atualizar senha"),
                         trailing: Icon(Icons.lock_outline),
                         subtitle: _status['index'] == 2 ? Text(
                           _status['status'], style: TextStyle(
                             color: _status['error'] ? Colors.red : Colors
-                                .green),) : Text("Update Your Password"),
+                                .green),) : Text("Atualize sua senha"),
                         onTap: () {
                           setState(() {
                             _status = {
@@ -161,7 +162,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [BoxShadow(
-                  color: Color.fromRGBO(51, 204, 255, 0.3),
+                  color: Color.fromRGBO(66, 165, 245, 0.3),
                   blurRadius: 20,
                   offset: Offset(0, 10),
                 )
@@ -177,10 +178,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                     ),
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
-                          hintText: "First Name"),
+                          hintText: "Nome"),
                       validator: (val) =>
                       val.isEmpty
-                          ? "First Name Can't Be Empty"
+                          ? "Nome não pode ficar em branco"
                           : null,
                       onChanged: (val) {
                         firstName = val;
@@ -195,10 +196,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                     ),
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
-                          hintText: "Last Name"),
+                          hintText: "Sobrenome"),
                       validator: (val) =>
                       val.isEmpty
-                          ? "Last Name Can't Be Empty"
+                          ? "Sobrenome não pode ficar em branco"
                           : null,
                       onChanged: (val) {
                         lastName = val;
@@ -224,7 +225,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                               'index': 0,
                               'action': null,
                               'error': false,
-                              'status': 'Name Changed Succesfuly',
+                              'status': 'Nome atualizado com sucesso',
                             };
                           });
                         }
@@ -234,7 +235,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                               'index': 0,
                               'action': 0,
                               'error': true,
-                              'status': 'Couldn\'t Update Name',
+                              'status': 'Não foi possível atualizar o nome',
                             };
                           });
                         }
@@ -245,10 +246,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                       margin: EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: Colors.cyan,
+                        color: Colors.blue[400],
                       ),
                       child: Center(
-                        child: Text("Update", style: TextStyle(color: Colors
+                        child: Text("Atualizar", style: TextStyle(color: Colors
                             .white,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,
@@ -272,10 +273,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                       margin: EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: Colors.cyan[200],
+                        color: Colors.grey[300],
                       ),
                       child: Center(
-                        child: Text("Cancel", style: TextStyle(color: Colors
+                        child: Text("Cancelar", style: TextStyle(color: Colors
                             .white,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,
@@ -307,7 +308,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [BoxShadow(
-                  color: Color.fromRGBO(51, 204, 255, 0.3),
+                  color: Color.fromRGBO(66, 165, 245, 0.3),
                   blurRadius: 20,
                   offset: Offset(0, 10),
                 )
@@ -323,7 +324,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                     ),
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
-                          hintText: "Old Password"),
+                          hintText: "Senha atual"),
                       validator: Account().validateRegisterPass,
                       obscureText: true,
                       onChanged: (val) {
@@ -339,7 +340,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                     ),
                     child: TextFormField(
                       decoration: authInputFormatting.copyWith(
-                          hintText: "New Password"),
+                          hintText: "Nova senha"),
                       validator: Account().validateRegisterPass,
                       obscureText: true,
                       onChanged: (val) {
@@ -364,7 +365,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                               'index': 2,
                               'action': null,
                               'error': false,
-                              'status': 'Password Changed Succesfuly',
+                              'status': 'Senha atualizada com sucesso',
                             };
                           });
                         }
@@ -374,7 +375,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                               'index': 2,
                               'action': 2,
                               'error': true,
-                              'status': 'Couldn\'t Change Password',
+                              'status': 'Não foi possível atualizar a senha',
                             };
                           });
                         }
@@ -385,10 +386,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                       margin: EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: Colors.cyan,
+                        color: Colors.blue[400],
                       ),
                       child: Center(
-                        child: Text("Update", style: TextStyle(color: Colors
+                        child: Text("Atualizar", style: TextStyle(color: Colors
                             .white,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,
@@ -412,10 +413,10 @@ class _AccountSettingsState extends State<AccountSettings> {
                       margin: EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: Colors.cyan[200],
+                        color: Colors.grey[300],
                       ),
                       child: Center(
-                        child: Text("Cancel", style: TextStyle(color: Colors
+                        child: Text("Cancelar", style: TextStyle(color: Colors
                             .white,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,

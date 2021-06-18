@@ -11,7 +11,7 @@ class User {
   Future<String> addUserData(String firstName, String lastName, String type) async {
     try {
       Map<String, dynamic> data = {
-        'fistName' : firstName,
+        'firstName' : firstName,
         'lastName' : lastName,
         'type' : type,
         'uid' : user.uid,
@@ -40,7 +40,7 @@ class User {
      await _users.document(user.email).get().then((DocumentSnapshot ds){
        data = ds;
      });
-     return (data.data['fistName'].toString() + " " + data.data['lastName'].toString());
+     return (data.data['firstName'].toString() + " " + data.data['lastName'].toString());
    }
    catch(e){
      print(e.toString());
@@ -51,7 +51,7 @@ class User {
   Future<String> updateUserName(String firstName, String lastName) async{
     try{
       await _users.document(user.email).updateData({
-        'fistName' : firstName,
+        'firstName' : firstName,
         'lastName' : lastName,
       });
       return 'Success';
@@ -66,7 +66,7 @@ class User {
 class Student {
 
   final FirebaseUser user;
-  Student({this.user});
+  Student([FirebaseUser user]) : this.user = user;
   
   final CollectionReference _users = Firestore.instance.collection('users');
   final CollectionReference _usersStudents = Firestore.instance.collection('user_students');
@@ -81,7 +81,7 @@ class Student {
       if (teacherUid == null) return 'Teacher not found';
 
       Map<String, dynamic> data = {
-        'fistName' : firstName,
+        'firstName' : firstName,
         'lastName' : lastName,
         'email' : email,
         'faceId' : faceId,
@@ -95,13 +95,14 @@ class Student {
     }
   }
   
-  Future<List<String>> getAllStudents() async{
+  Future<List<Map>> getAllStudents() async{
     try{
       List<Map> students = [];
       QuerySnapshot qs = await _usersStudents.document(user.email).collection(collectionKey).getDocuments();
       qs.documents.forEach((DocumentSnapshot ds){
-        students.add(ds.data);
+        if (ds.exists) students.add(ds.data);
       });
+
       return students.isEmpty ? [] : students;
     } catch(e) {
       print(e.toString());
@@ -129,7 +130,7 @@ class StudentsList{
   }
 }
 
-class TeacherSubjectsAndBatches{
+class TeacherSubjectsAndBatches {
 
   final FirebaseUser user;
   TeacherSubjectsAndBatches(this.user);
@@ -317,16 +318,11 @@ class TeacherSubjectsAndBatches{
       return null;
     }
   }
-}
 
-class Attendance {
-
-  final CollectionReference _teachers = Firestore.instance.collection('teacher_attendances');
-
-  Future<Map> getAttendance(String teacherEmail, String subject, String batch, String studentEmail) async{
+  Future<Map> getAttendance(String subject, String batch, String studentEmail) async{
     try{
       Map attendanceList = {};
-      await _teachers.document(teacherEmail).collection(subject).document(batch).collection('attendance').document(studentEmail).get().then((DocumentSnapshot ds){
+      await _subjectsBatches.document(user.email).collection(subject).document(batch).collection('attendance').document(studentEmail).get().then((DocumentSnapshot ds){
         if(ds.exists){
           attendanceList = ds.data;
         }

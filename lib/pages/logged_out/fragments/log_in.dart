@@ -89,7 +89,7 @@ class _LoginState extends State<Login> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [BoxShadow(
-                      color: Color.fromRGBO(51, 204, 255, 0.3),
+                      color: Color.fromRGBO(66, 165, 245, 0.3),
                       blurRadius: 20,
                       offset: Offset(0, 10),
                     )],
