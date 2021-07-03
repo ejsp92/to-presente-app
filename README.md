@@ -2,7 +2,7 @@
 	<img src="https://github.com/ejsp92/smart_attendance_register_app/blob/main/logo-without-bg.png?raw=true" alt="Logo" width="200"/>
 </p>
 
-<a href="https://github.com/ejsp92/smart_attendance_register_app/blob/main/images/google-play-badge.png?raw=true" rel="nofollow">
+<a href="https://play.google.com/store/apps/details?id=br.com.emesonpereira.to_presente" rel="nofollow">
     <img src="https://github.com/ejsp92/smart_attendance_register_app/blob/main/images/google-play-badge.png?raw=true" width="180" style="max-width:100%;">
 </a>
 
@@ -51,7 +51,9 @@ Os recursos deste aplicativo incluem:
 
 [![Vídeo Marketing](https://img.youtube.com/vi/mXqWHev1q0c/0.jpg)](https://www.youtube.com/watch?v=mXqWHev1q0c)
 
-### Demonstração
+### Demonstrativo
+
+[![Vídeo Marketing](https://img.youtube.com/vi/nxnpZkhh-SU/0.jpg)](https://www.youtube.com/watch?v=nxnpZkhh-SU)
   
 ## DOCUMENTAÇÃO
 
