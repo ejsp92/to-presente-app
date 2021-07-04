@@ -1,9 +1,9 @@
 <p align="center">
-	<img src="https://github.com/ejsp92/smart_attendance_register_app/blob/main/logo-without-bg.png?raw=true" alt="Logo" width="200"/>
+	<img src="logo-without-bg.png" alt="Logo" width="200"/>
 </p>
 
 <a href="https://play.google.com/store/apps/details?id=br.com.emesonpereira.to_presente" rel="nofollow">
-    <img src="https://github.com/ejsp92/smart_attendance_register_app/blob/main/images/google-play-badge.png?raw=true" width="180" style="max-width:100%;">
+    <img src="images/google-play-badge.png?raw=true" width="180" style="max-width:100%;">
 </a>
 
 # Tô Presente App
